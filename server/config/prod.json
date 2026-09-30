@@ -1,0 +1,4 @@
+{
+  "port": 8080,
+  "clientDist": "../dist/ai-code-agent/browser"
+}

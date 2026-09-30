@@ -1,0 +1,26 @@
+{
+  "name": "ai-code-agent-server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "cross-env NODE_CONFIG_ENV=dev NODE_ENV=development tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "cross-env NODE_CONFIG_ENV=prod NODE_ENV=production node dist/index.js",
+    "start:test": "cross-env NODE_CONFIG_ENV=test NODE_ENV=test node dist/index.js"
+  },
+  "dependencies": {
+    "compression": "^1.8.2",
+    "config": "^5.0.1",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/compression": "^1.8.1",
+    "@types/config": "^3.3.5",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.3",
+    "cross-env": "^10.1.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
