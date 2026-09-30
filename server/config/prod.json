@@ -1,4 +1,32 @@
 {
   "port": 8080,
-  "clientDist": "../dist/ai-code-agent/browser"
+  "clientDist": "../dist/ai-code-agent/browser",
+  "workspaces": { "root": "../../workspaces" },
+  "starter": { "repo": "https://github.com/SmaLLAlien/starter.git", "ref": "starter-v0" },
+  "agent": {
+    "dir": "./agent",
+    "stateDir": "./.pi-state",
+    "thinkingLevel": "medium",
+    "llm": {
+      "active": "juapi",
+      "providers": {
+        "juapi": {
+          "piProvider": "juapi",
+          "model": "gemini-3.1-flash-lite",
+          "apiKeyEnv": "JUAPI_API_KEY",
+          "custom": {
+            "baseUrl": "https://www.juapi.net/v1",
+            "api": "openai-completions",
+            "contextWindow": 200000,
+            "maxTokens": 32000
+          }
+        },
+        "gemini": {
+          "piProvider": "google",
+          "model": "gemini-2.5-pro",
+          "apiKeyEnv": "GEMINI_API_KEY"
+        }
+      }
+    }
+  }
 }
