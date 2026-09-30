@@ -15,12 +15,17 @@
 ## Структура
 
 ```
-src/                  Angular 21 клиент (standalone, signals)
+src/                  Angular 21 клиент (standalone, signals, zoneless); чат — src/app/chat/
 server/               Express 5 + TypeScript, ОТДЕЛЬНЫЙ пакет (свой package.json, node_modules)
   src/index.ts        запуск http-сервера, graceful shutdown
   src/app.ts          createApp(): compression, /api, раздача сборки Angular
   src/config.ts       типизированная обёртка над пакетом `config`
-  src/routes/         Express-роутеры (/api/*)
+  src/routes/         Express-роутеры (/api/*), chats.ts — AG-UI endpoint
+  src/agent/          pi: провайдеры LLM (llm.ts), фабрика сессий
+  src/agui/           транслятор событий pi → AG-UI
+  src/chats/          реестр чатов
+  src/workspaces/     клонирование стартера в воркспейс чата
+  agent/              agentDir pi: платформенные AGENTS.md и skills (слой 2)
   config/             dev.json | test.json | prod.json (пакет `config`)
 docs/plan/            план по слоям: README.md + layer-N.md
 .agents/rules/        правила кода (обязательны к соблюдению)
@@ -37,7 +42,7 @@ memorybank.md         журнал реализации
 | `server/` | `npm run dev` | сервер в watch-режиме (tsx), конфиг `dev`, порт 3000 |
 | `server/` | `npm run build` | компиляция TS в `server/dist` |
 | `server/` | `npm start` | прод-запуск, конфиг `prod`, порт 8080 |
-| `server/` | `npm test` | тесты сервера (node:test), появляются в слое 1 |
+| `server/` | `npm test` | тесты сервера (node:test + tsx, файлы `src/**/*.test.ts`) |
 
 Node ≥ 22.19 (требование pi SDK).
 
@@ -64,7 +69,9 @@ Node ≥ 22.19 (требование pi SDK).
 
 ### Секреты (строго)
 - **Никогда не читай и не выводи значения секретов**: не запускай `env`, `printenv`, `echo $JUAPI_API_KEY`,
-  `Get-ChildItem env:`, не открывай `.env`/`*.env` файлы, не логируй ключи.
+  `Get-ChildItem env:`, не открывай `.env`/`*.env` файлы (в т.ч. `server/.env`), не логируй ключи.
+- Ключи лежат в `server/.env` (в `.gitignore`, шаблон — `server/.env.example`); `npm run dev|start`
+  подгружают его сами (`--env-file-if-exists`). Запускать сервер с ним можно, читать файл — нельзя.
 - Тебе не нужен ключ: unit-тесты работают без него. Ручную проверку с реальной моделью выполняет
   пользователь — в конце слоя опиши ему шаги.
 - Если для задачи кажется, что ключ нужен, — остановись и спроси пользователя.

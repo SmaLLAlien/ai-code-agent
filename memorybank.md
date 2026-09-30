@@ -5,17 +5,27 @@
 
 ## Текущее состояние
 
-- **Слой:** 0 (подготовка) завершён → следующий: [слой 1](docs/plan/layer-1.md), задача 1.1.
-- **Ветка:** `feat/express-server` (запушена в `origin`).
-- **Последнее действие:** созданы `AGENTS.md`, `CLAUDE.md`, `.agents/rules/angular-best-practices.md`,
-  `docs/plan/*`, этот файл. Не закоммичено — коммитит пользователь.
+- **Слой:** 1 реализован и проверен вживую с juapi (`gemini-3.1-flash-lite`); ждёт ревью
+  пользователя → коммит. Слой 2 не начинать без команды пользователя.
+- **Ветка:** `feat/layer-1-chat-agent` (от `feat/express-server`, коммит документов `bd32214`).
+- **Последнее действие:** живой e2e (см. ниже). Не закоммичено — коммитит пользователь.
+
+**Живая проверка слоя 1 (2026-09-30, ключ в `server/.env`):**
+- вопрос по проекту → `ls` + потоковый ответ ✅;
+- «создай компонент hello и подключи» → 8 тулов подряд (bash, write, read, edit…), файлы созданы,
+  контекст чата сохраняется ✅ — проблема `thought_signature` через juapi **не проявилась**;
+- «выполни env» → в выводе нет `JUAPI_API_KEY`/`GEMINI_API_KEY` ✅; `.pi-state/auth.json` = `{}` ✅;
+- браузер: стрим, строки действий, «Стоп» во время `npm install` → процесс на сервере убит, действие
+  помечено «остановлено», следующее сообщение работает ✅.
+- Наблюдение для слоя 2: без правил агент пишет `standalone: true` и не следует нашим Angular-правилам
+  (ожидаемо — правила подключаются в 2.7/2.8). Markdown в ответах пока сырой (2.1).
 
 ## Статус слоёв
 
 | Слой | Статус | Примечание |
 |---|---|---|
 | 0. Подготовка (Express-сервер, документы) | ✅ готово | сервер — коммит `b1f6a94` |
-| 1. База: чат ↔ pi | ⏳ не начат | |
+| 1. База: чат ↔ pi | 🔍 на ревью | реализовано, проверено вживую с juapi |
 | 2. Возможности чата и агента | ⏳ | |
 | 3. История чатов | ⏳ | |
 | 4. Память | ⏳ | |
@@ -26,15 +36,15 @@
 
 | # | Задача | Статус |
 |---|---|---|
-| 1.1 | Конфиг и зависимости сервера | ⏳ |
-| 1.2 | Воркспейсы | ⏳ |
-| 1.3 | Агент (pi SDK) | ⏳ |
-| 1.4 | Реестр чатов | ⏳ |
-| 1.5 | Транслятор pi → AG-UI | ⏳ |
-| 1.6 | Роуты чатов (AG-UI endpoint) | ⏳ |
-| 1.7 | Фронт: инфраструктура | ⏳ |
-| 1.8 | Фронт: состояние чата | ⏳ |
-| 1.9 | Фронт: компоненты чата | ⏳ |
+| 1.1 | Конфиг и зависимости сервера | ✅ |
+| 1.2 | Воркспейсы | ✅ проверено офлайн (клон стартера + коммит) |
+| 1.3 | Агент (pi SDK), `llm.ts` | ✅ проверено офлайн (модель juapi резолвится, ключ не на диске) |
+| 1.4 | Реестр чатов | ✅ |
+| 1.5 | Транслятор pi → AG-UI | ✅ 7 тестов |
+| 1.6 | Роуты чатов (AG-UI endpoint) | ✅ SSE проверен с фиктивным ключом (RUN_STARTED → RUN_ERROR) |
+| 1.7 | Фронт: инфраструктура | ✅ proxy, HttpClient, lazy-роут, `App` = только `<router-outlet />` |
+| 1.8 | Фронт: состояние чата | ✅ редьюсер `applyAgUiEvent` + `stopRunningTools` (4 теста) + `AgentSessionService` |
+| 1.9 | Фронт: компоненты чата | ✅ проверено в браузере с реальной моделью: стрим, тулы, ошибка, Стоп, 375px |
 
 ## Что уже есть
 
@@ -47,6 +57,29 @@
   - `src/routes/api.ts` — `GET /api/health`, JSON-404 для `/api/*`.
   - `config/{dev,test,prod}.json` — порты 3000 / 3001 / 8080. Выбор файла — `NODE_CONFIG_ENV`.
 
+## Слой 1 — что сделано (для ревью)
+
+**Сервер (`server/`):**
+- `config/{dev,test,prod}.json` — `workspaces`, `starter`, `agent.llm` (провайдеры juapi/gemini).
+- `src/config.ts` — типизированный конфиг + валидация `agent.llm.active`.
+- `src/agent/llm.ts` — ключи из env → память, удаление из `process.env`, генерация `models.json`,
+  `ModelRuntime`, выбор модели активного провайдера. Тест `llm.test.ts`.
+- `src/agent/create-session.ts` — pi-сессия на воркспейс (tools: read, bash, edit, write, grep, find, ls).
+- `src/workspaces/workspace.service.ts` — `git clone` стартера → свой git с коммитом `starter`.
+- `src/chats/chat.registry.ts` — чаты в памяти, `disposeAll` при shutdown.
+- `src/agui/pi-to-agui.ts` — транслятор событий (+ 8 тестов вместе с llm).
+- `src/routes/chats.ts` — `POST /api/chats`, `POST /api/chats/:id/run` (SSE), `POST /api/chats/:id/abort`.
+- `src/app.ts` — SSE исключён из compression; `express.json`; 4xx из middleware не превращаются в 500.
+- `src/index.ts` — `loadLlmKeys()` до старта, понятная ошибка без ключа.
+
+**Фронт (`src/`):** `proxy.conf.json`; `app/chat/`: `chat-items.ts` (редьюсер + spec),
+`agent-session.service.ts`, `chat-page`, `message-list`, `tool-call-item`, `composer`; `styles.css` —
+токены цветов со светлой/тёмной темой.
+
+**Отклонения от плана:** ошибки модели ловятся по `message_end` (см. Gotchas); добавлена правка
+error handler'а; `Composer` чистит поле напрямую; статус тула `stopped`; ключи — через `server/.env`
+(`--env-file-if-exists`), шаблон `server/.env.example`.
+
 ## Принятые решения
 
 | Решение | Почему |
@@ -55,6 +88,7 @@
 | LLM через провайдеры в конфиге (`agent.llm.active` + `providers`), вся логика в `server/src/agent/llm.ts` | Смена модели/шлюза без правок кода |
 | Провайдер по умолчанию — `juapi` (juapi.net, OpenAI-совместимый, `JUAPI_API_KEY`); второй — `gemini` (`GEMINI_API_KEY`, корпоративный) | У пользователя есть ключ juapi; Gemini — позже, ключ задаст сам |
 | Ключи LLM: читаются при старте и удаляются из `process.env`; в файлы не пишутся | bash-тул pi наследует env сервера |
+| Локально ключи — в `server/.env` (gitignored, шаблон `.env.example`), грузятся `--env-file-if-exists` в `dev/start` | Агент-разработчик может запускать живые проверки, не видя ключ |
 | Один агент с режимами `plan`/`agent`, не два агента | Контекст уточнений не теряется; режимы через extension-хуки pi |
 | Протокол UI — AG-UI поверх SSE, UI — свои Angular-компоненты | pi-web-ui заморожен и гоняет агента в браузере; CopilotKit Angular pre-1.0 |
 | Стартер — git URL + ref из конфига, клонирует платформа | Воспроизводимость; агент не тратит на это шаги |
@@ -67,6 +101,37 @@
 
 ## Gotchas (особенности библиотек)
 
+Проверено в слое 1 (по коду pi 0.99.1 / AG-UI 1.0.1):
+- pi: `setRuntimeApiKey` кладёт ключ в in-memory `overrides` (`runtime-credentials.js`), на диск не
+  пишет; `.pi-state/auth.json` создаётся, но без ключа. Проверено.
+- pi: **ошибка запроса к модели** (auth/4xx/5xx) не даёт `message_update:error` — приходит
+  `message_end` с `message.stopReason === 'error'` и `errorMessage`; `prompt()` при этом резолвится,
+  не реджектится. Транслятор ловит это → `RUN_ERROR`.
+- pi: `ThinkingLevel` из `pi-agent-core` не импортируется напрямую (пакет не поднят в node_modules) →
+  тип выводится как `NonNullable<CreateAgentSessionOptions['thinkingLevel']>` (`server/src/config.ts`).
+- pi: схема `models.json` — `model-config.d.ts` (`providers.<id>.{baseUrl, api, apiKey?, models[{id,
+  name, contextWindow, maxTokens, input, compat?}]}`); `compat` для openai-completions:
+  `supportsDeveloperRole`, `maxTokensField`, `requiresToolResultName` и др.
+- pi: импорт пакета медленный (~15 с на холодный старт тестов) — нормально.
+- juapi: с фиктивным ключом `POST /v1/chat/completions` → **пустой 404** (не 401) — так juapi
+  отвечает на неверный ключ. С настоящим ключом всё работает (проверено).
+- AG-UI: после «Стоп» `TOOL_CALL_RESULT` не приходит → клиент по завершении рана помечает
+  незавершённые тулы как `stopped` (`stopRunningTools`).
+- TS target ES2022 → нет `Array.prototype.findLast`.
+- Тестовые файлы `*.test.ts` исключены из `tsc` (не попадают в `dist`), запускаются через tsx без
+  проверки типов.
+- `express.json` на битый JSON → error handler теперь отвечает его 4xx-статусом, а не 500.
+- AG-UI client: при `abortRun()` сам отдаёт подписчику `RUN_ERROR` («BodyStreamBuffer was aborted»)
+  → в `AgentSessionService` ошибки после пользовательского «Стоп» игнорируются (флаг `stopped`).
+- Angular zoneless + `[value]` у textarea: если Enter нажат в том же кадре, что и последний ввод,
+  биндинг ещё не отрисован с текстом, и `text.set('')` не считается изменением → поле не очищается.
+  В `Composer` поле очищается напрямую через `viewChild`.
+- Бандл: lazy-чанк чата ~796 КБ raw / ~108 КБ gzip — в основном `@ag-ui/client` (zod, proto).
+  Бюджет initial не затронут. Если станет проблемой — свой лёгкий SSE-клиент вместо `HttpAgent`.
+- `npm audit` (server): 1 high — `brace-expansion` внутри `pi-coding-agent` (DoS на glob-паттернах).
+  `npm audit fix` не лечит (диапазон зафиксирован pi). Риск низкий до слоя 5 (изоляция); можно
+  закрыть `overrides` в `server/package.json` после проверки совместимости.
+
 - pi: пакеты `@mariozechner/*` deprecated → только `@earendil-works/*`. ESM-only, Node ≥ 22.19.
 - pi: `session.prompt()` отклоняется, если ран уже идёт → на сервере проверять `session.isStreaming` (409).
 - pi: `DefaultResourceLoader` требует `await loader.reload()` до `createAgentSession`.
@@ -75,11 +140,9 @@
 - pi `bash`-тул — дочерний процесс сервера и наследует его env → ключи LLM удалять из
   `process.env` после чтения при старте (слой 1, задача 1.3). Полностью закрывается в слое 5.
 - juapi.net — ретранслятор на new-api: id моделей зависят от аккаунта, смотреть `GET /v1/models`.
-- **Риск (не проверено):** модели Gemini 3 при function calling требуют возвращать `thought_signature`
-  в следующих запросах. Через OpenAI-совместимый ретранслятор подпись может теряться → ошибка 400 на
-  втором шаге с тулом. Проверить на первом живом ране (задача 1.3/1.6): задача, где агент делает ≥2
-  вызова тулов подряд. Если падает — попробовать `"api": "openai-responses"`, `compat`-опции из
-  pi `docs/models.md`, либо другую модель juapi; результат записать сюда.
+- ~~Риск `thought_signature` у Gemini 3 через ретранслятор~~ — проверено: 8 вызовов тулов подряд через
+  juapi (`openai-completions`) работают. Если всплывёт на других моделях — `"api": "openai-responses"`
+  или `compat`-опции из pi `docs/models.md`.
 - `gemini-3.1-flash-lite` — лёгкая модель: для отладки платформы ок, качество кода может быть слабым.
   Для оценки качества MVP (слой 2) сравнить с более сильной моделью.
 - `compression` буферизует `text/event-stream` → SSE нужно исключать из сжатия (слой 1, задача 1.6).

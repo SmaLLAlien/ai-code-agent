@@ -1,3 +1,4 @@
+import { STATUS_CODES } from 'node:http';
 import path from 'node:path';
 import compression from 'compression';
 import express, { type ErrorRequestHandler, type Express } from 'express';
@@ -10,9 +11,16 @@ export function createApp(clientDist: string): Express {
   const app = express();
 
   app.disable('x-powered-by');
-  app.use(compression());
+  app.use(
+    compression({
+      // compression buffers the body; an SSE stream must reach the client event by event.
+      filter: (req, res) =>
+        !String(res.getHeader('Content-Type') ?? '').startsWith('text/event-stream') &&
+        compression.filter(req, res),
+    }),
+  );
 
-  app.use('/api', apiRouter);
+  app.use('/api', express.json({ limit: '1mb' }), apiRouter);
 
   app.use(
     express.static(clientDist, {
@@ -28,10 +36,16 @@ export function createApp(clientDist: string): Express {
   );
 
   const errorHandler: ErrorRequestHandler = (err, _req, res, next) => {
-    console.error(err);
     if (res.headersSent) {
       return next(err);
     }
+    // Client errors raised by middleware (e.g. malformed JSON from express.json) keep their status.
+    const status = (err as { status?: unknown }).status;
+    if (typeof status === 'number' && status >= 400 && status < 500) {
+      res.status(status).json({ error: STATUS_CODES[status] ?? 'Bad Request' });
+      return;
+    }
+    console.error(err);
     res.status(500).json({ error: 'Internal Server Error' });
   };
   app.use(errorHandler);
