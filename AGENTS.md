@@ -21,11 +21,12 @@ server/               Express 5 + TypeScript, ОТДЕЛЬНЫЙ пакет (с�
   src/app.ts          createApp(): compression, /api, раздача сборки Angular
   src/config.ts       типизированная обёртка над пакетом `config`
   src/routes/         Express-роутеры (/api/*), chats.ts — AG-UI endpoint
-  src/agent/          pi: провайдеры LLM (llm.ts), фабрика сессий
-  src/agui/           транслятор событий pi → AG-UI
-  src/chats/          реестр чатов
-  src/workspaces/     клонирование стартера в воркспейс чата
-  agent/              agentDir pi: платформенные AGENTS.md и skills (слой 2)
+  src/agent/          pi: провайдеры LLM (llm.ts), фабрика сессий, tools/ (ask_user, update_todo),
+                      extensions/ (режимы plan/agent)
+  src/agui/           транслятор событий pi → AG-UI (+ CUSTOM-события UI)
+  src/chats/          реестр чатов, состояние чата (режим, todo)
+  src/workspaces/     клонирование стартера в воркспейс чата, git-чекпоинты
+  agent/              agentDir pi: платформенные правила агента (AGENTS.md) и skills/
   config/             dev.json | test.json | prod.json (пакет `config`)
 docs/plan/            план по слоям: README.md + layer-N.md
 .agents/rules/        правила кода (обязательны к соблюдению)

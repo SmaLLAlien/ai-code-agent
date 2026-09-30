@@ -18,14 +18,23 @@
   cursor: pointer;
 }
 
+.summary.error {
+  border-color: var(--danger);
+}
+
+.summary.error .status {
+  color: var(--danger);
+}
+
 .summary:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
-.name {
+.verb {
   font-weight: 600;
   color: var(--text);
+  white-space: nowrap;
 }
 
 .target {

@@ -5,10 +5,20 @@
 
 ## Текущее состояние
 
-- **Слой:** 1 реализован и проверен вживую с juapi (`gemini-3.1-flash-lite`); ждёт ревью
-  пользователя → коммит. Слой 2 не начинать без команды пользователя.
-- **Ветка:** `feat/layer-1-chat-agent` (от `feat/express-server`, коммит документов `bd32214`).
-- **Последнее действие:** живой e2e (см. ниже). Не закоммичено — коммитит пользователь.
+- **Слой:** 2 закоммичен (`b7cd662`). Слой 3 не начинать без команды пользователя.
+- **Ветки:** слой 1 — `feat/layer-1-chat-agent` (`daa9090`); слой 2 — `feat/layer-2-agent-ui` (`b7cd662`,
+  от слоя 1). Не запушены.
+- **Стартер:** `starter-v1` (`26b9cea`, запушен) — AGENTS.md, CLAUDE.md, правила Angular, скилы
+  `add-page`, `add-api-endpoint`. `starter.ref` в `server/config/*.json` = `starter-v1` (проверено:
+  новый воркспейс содержит AGENTS.md и скилы). Локальный клон стартера: `D:\Projects\ai code agent\starter`
+  (push по SSH).
+
+**Живая проверка слоя 2 (2026-09-30, juapi `gemini-3.1-flash-lite`):** «сайт-визитка для кофейни» →
+`ask_user` (2 вопроса карточкой, ход завершился) → ответы через карточку → `docs/PLAN.md` →
+карточка плана → «Утвердить» → режим agent, `update_todo` 4/4, ошибки тулов подсвечены, агент сам
+сделал `npm install` и чинил сборку до зелёного `npm run build` → коммит-чекпоинт, «Изменено файлов: 21»
+(все легитимные). Замечание: flash-lite пишет упрощённый план (без путей и «Done when» из скилла
+`writing-plans`) и несколько раз спотыкается на сборке — для качества MVP сравнить с моделью сильнее.
 
 **Живая проверка слоя 1 (2026-09-30, ключ в `server/.env`):**
 - вопрос по проекту → `ls` + потоковый ответ ✅;
@@ -25,8 +35,8 @@
 | Слой | Статус | Примечание |
 |---|---|---|
 | 0. Подготовка (Express-сервер, документы) | ✅ готово | сервер — коммит `b1f6a94` |
-| 1. База: чат ↔ pi | 🔍 на ревью | реализовано, проверено вживую с juapi |
-| 2. Возможности чата и агента | ⏳ | |
+| 1. База: чат ↔ pi | ✅ закоммичен | `daa9090` |
+| 2. Возможности чата и агента | ✅ закоммичен | `b7cd662`; стартер `starter-v1` |
 | 3. История чатов | ⏳ | |
 | 4. Память | ⏳ | |
 | 5. Изоляция и превью | ⏳ | |
@@ -45,6 +55,20 @@
 | 1.7 | Фронт: инфраструктура | ✅ proxy, HttpClient, lazy-роут, `App` = только `<router-outlet />` |
 | 1.8 | Фронт: состояние чата | ✅ редьюсер `applyAgUiEvent` + `stopRunningTools` (4 теста) + `AgentSessionService` |
 | 1.9 | Фронт: компоненты чата | ✅ проверено в браузере с реальной моделью: стрим, тулы, ошибка, Стоп, 375px |
+
+### Слой 2 — задачи
+
+| # | Задача | Статус |
+|---|---|---|
+| 2.1 | Markdown + reasoning | ✅ `marked` → `[innerHTML]` (санитайзер Angular), `thinking_*` → `REASONING_*`, свёрнутый блок |
+| 2.2 | Карточки действий | ✅ глаголы по тулам, живой вывод (`CUSTOM tool_output`), статус ошибки (`CUSTOM tool_status`) |
+| 2.3 | Режимы plan/agent | ✅ `forwardedProps.mode`, `STATE_SNAPSHOT`, `mode.extension.ts` (промпт + блокировки), переключатель + `/plan` `/agent` |
+| 2.4 | `ask_user` | ✅ `terminate: true` в результате тула завершает ход; `QuestionCard` |
+| 2.5 | `update_todo` | ✅ `STATE_SNAPSHOT.todo` → `TodoPanel` |
+| 2.6 | Утверждение плана | ✅ `CUSTOM plan_ready` → `PlanCard`; план коммитится при каждой записи |
+| 2.7 | Платформенные правила и скилы | ✅ `server/agent/AGENTS.md` + 5 скилов (brainstorming, writing-plans, executing-plans, verification-before-completion, html-prototype-import) |
+| 2.8 | Правила в стартере | ✅ `starter-v1` запушен, платформа переключена на него |
+| 2.9 | Git-чекпоинты | ✅ `commitCheckpoint` после рана в agent → `CUSTOM files_changed` |
 
 ## Что уже есть
 
@@ -100,6 +124,22 @@ error handler'а; `Composer` чистит поле напрямую; стату�
 | Пользователи — внутренняя команда; песочницы — свой Docker-хост | Ответы пользователя |
 
 ## Gotchas (особенности библиотек)
+
+Проверено в слое 2:
+- pi: завершить ход после тула — `terminate: true` в `AgentToolResult` (срабатывает, если все тулы
+  пачки его вернули; `ask_user` просит модель не звать другие тулы в том же ходе).
+- pi: при явном `tools: [...]` включаются **только** перечисленные — кастомные (`ask_user`,
+  `update_todo`) нужно добавлять и в `tools`, и в `customTools`.
+- pi: `event.input` в `tool_call` — union типов входов встроенных тулов; путь брать через приведение
+  `(event.input as { path?: unknown }).path`.
+- pi: `agentDir/AGENTS.md` + `agentDir/skills/*` и `AGENTS.md` + `.agents/skills/*` воркспейса грузятся
+  одновременно (проверено по `session.systemPrompt`).
+- `typebox` 1.3.27 — прямая зависимость сервера (та же версия, что у pi).
+- AG-UI reasoning: `REASONING_START{messageId}` (id спана) + `REASONING_MESSAGE_START{messageId, role:'reasoning'}`.
+- Windows: `fs.rm` папки сразу после неудачного `git clone` может дать `EBUSY` → очистка с
+  `maxRetries` и без маскировки исходной ошибки.
+- Dev-окружение: при остановке серверов гасить и `tsx watch` (иначе он перезапускает сервер и держит порт).
+- Бандл чата вырос до ~860 КБ raw / ~124 КБ gzip (+`marked`).
 
 Проверено в слое 1 (по коду pi 0.99.1 / AG-UI 1.0.1):
 - pi: `setRuntimeApiKey` кладёт ключ в in-memory `overrides` (`runtime-credentials.js`), на диск не
