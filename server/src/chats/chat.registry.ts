@@ -2,11 +2,13 @@ import { randomUUID } from 'node:crypto';
 import type { AgentSession } from '@earendil-works/pi-coding-agent';
 import { createSession } from '../agent/create-session.js';
 import { createWorkspace } from '../workspaces/workspace.service.js';
+import { type ChatState, createChatState } from './chat-state.js';
 
 export interface Chat {
   id: string;
   workspacePath: string;
   session: AgentSession;
+  state: ChatState;
   createdAt: Date;
 }
 
@@ -17,8 +19,9 @@ class ChatRegistry {
   async create(): Promise<Chat> {
     const id = randomUUID();
     const workspacePath = await createWorkspace(id);
-    const session = await createSession(workspacePath);
-    const chat: Chat = { id, workspacePath, session, createdAt: new Date() };
+    const state = createChatState();
+    const session = await createSession(workspacePath, state);
+    const chat: Chat = { id, workspacePath, session, state, createdAt: new Date() };
     this.chats.set(id, chat);
     return chat;
   }

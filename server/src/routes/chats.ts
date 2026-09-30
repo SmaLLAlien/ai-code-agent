@@ -1,9 +1,13 @@
 import { randomUUID } from 'node:crypto';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import { type AGUIEvent, EventType, type RunAgentInput } from '@ag-ui/core';
 import { EventEncoder } from '@ag-ui/encoder';
 import { Router } from 'express';
-import { PiToAgUiTranslator } from '../agui/pi-to-agui.js';
-import { chatRegistry } from '../chats/chat.registry.js';
+import { custom, CustomEventName, PiToAgUiTranslator } from '../agui/pi-to-agui.js';
+import { CHAT_MODES, type ChatMode, PLAN_FILE } from '../chats/chat-state.js';
+import { type Chat, chatRegistry } from '../chats/chat.registry.js';
+import { commitCheckpoint } from '../workspaces/checkpoint.js';
 
 export const chatsRouter = Router();
 
@@ -50,9 +54,15 @@ chatsRouter.post('/:id/run', async (req, res) => {
     Connection: 'keep-alive',
   });
   res.flushHeaders();
-  send({ type: EventType.RUN_STARTED, threadId, runId });
 
-  const translator = new PiToAgUiTranslator();
+  const mode = (input.forwardedProps as { mode?: unknown } | undefined)?.mode;
+  if (CHAT_MODES.includes(mode as ChatMode)) {
+    chat.state.mode = mode as ChatMode;
+  }
+
+  const translator = new PiToAgUiTranslator(chat.state);
+  send({ type: EventType.RUN_STARTED, threadId, runId });
+  send(translator.stateSnapshot());
   const unsubscribe = session.subscribe((event) => translator.translate(event).forEach(send));
 
   let finished = false;
@@ -66,6 +76,7 @@ chatsRouter.post('/:id/run', async (req, res) => {
   try {
     await session.prompt(text);
     translator.closeOpen().forEach(send);
+    (await runOutcomeEvents(chat, translator, text)).forEach(send);
     send(
       translator.error
         ? { type: EventType.RUN_ERROR, message: translator.error }
@@ -91,6 +102,32 @@ chatsRouter.post('/:id/abort', async (req, res) => {
   await chat.session.abort();
   res.status(204).end();
 });
+
+/**
+ * Events produced after the agent finished: in plan mode the written plan is committed and waits
+ * for approval, in agent mode the changes are committed as a checkpoint.
+ */
+async function runOutcomeEvents(
+  chat: Chat,
+  translator: PiToAgUiTranslator,
+  request: string,
+): Promise<AGUIEvent[]> {
+  const planPath = path.resolve(chat.workspacePath, PLAN_FILE);
+  const planWritten = [...translator.writtenFiles].some(
+    (file) => path.resolve(chat.workspacePath, file) === planPath,
+  );
+  if (chat.state.mode === 'plan' && planWritten) {
+    // Commit each plan version so the history shows how the plan evolved before approval.
+    await commitCheckpoint(chat.workspacePath, `plan: ${request}`);
+    const content = await fs.readFile(planPath, 'utf8');
+    return [custom(CustomEventName.PlanReady, { content })];
+  }
+  if (chat.state.mode === 'agent') {
+    const checkpoint = await commitCheckpoint(chat.workspacePath, request);
+    return checkpoint ? [custom(CustomEventName.FilesChanged, checkpoint)] : [];
+  }
+  return [];
+}
 
 function lastUserText(input: Partial<RunAgentInput>): string {
   const message = [...(input.messages ?? [])].reverse().find((m) => m.role === 'user');

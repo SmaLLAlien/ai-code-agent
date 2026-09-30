@@ -1,5 +1,65 @@
 :host {
   display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+}
+
+.modes {
+  display: inline-flex;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.modes button {
+  padding: 0.2rem 0.8rem;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.modes button[aria-checked='true'] {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.commands {
+  margin: 0;
+  padding: 0.25rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-muted);
+  list-style: none;
+}
+
+.commands button {
+  width: 100%;
+  padding: 0.3rem 0.5rem;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.875rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.commands button:hover {
+  background: var(--surface);
+}
+
+.row {
+  display: flex;
   gap: 0.5rem;
   align-items: flex-end;
 }
@@ -22,7 +82,7 @@ button:focus-visible {
   outline-offset: 2px;
 }
 
-button {
+.send {
   padding: 0.5rem 1rem;
   border: none;
   border-radius: 8px;
@@ -33,7 +93,7 @@ button {
   cursor: pointer;
 }
 
-button:disabled {
+.send:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

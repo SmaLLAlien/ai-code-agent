@@ -11,30 +11,43 @@ import {
 import { AgentSessionService } from './agent-session.service';
 import { Composer } from './composer';
 import { MessageList } from './message-list';
+import { TodoPanel } from './todo-panel';
 
 @Component({
   selector: 'app-chat-page',
-  imports: [MessageList, Composer],
+  imports: [MessageList, Composer, TodoPanel],
   providers: [AgentSessionService],
   template: `
     <header>
       <h1>AI Code Agent</h1>
+      <span class="mode">{{ session.mode() === 'plan' ? 'Режим плана' : 'Режим агента' }}</span>
       @if (session.isRunning()) {
         <span class="status" role="status">Агент работает…</span>
       }
     </header>
     <main #feed class="feed" role="log" aria-live="polite" aria-label="Диалог с агентом">
-      <app-message-list [items]="session.items()" />
+      <app-message-list
+        [items]="session.items()"
+        [busy]="session.isRunning()"
+        (answer)="session.answerQuestion($event.id, $event.text)"
+        (approvePlan)="session.approvePlan($event)"
+        (revisePlan)="composer().focus()"
+      />
     </main>
     <footer>
+      @if (session.todo().length) {
+        <app-todo-panel [items]="session.todo()" />
+      }
       @if (session.error(); as error) {
         <p class="error" role="alert">{{ error }}</p>
       }
       <app-composer
         [running]="session.isRunning()"
         [disabled]="!ready()"
+        [mode]="session.mode()"
         (send)="session.send($event)"
         (stop)="session.stop()"
+        (modeChange)="session.setMode($event)"
       />
     </footer>
   `,
@@ -44,6 +57,7 @@ import { MessageList } from './message-list';
 export class ChatPage implements OnInit {
   protected readonly session = inject(AgentSessionService);
   protected readonly ready = computed(() => this.session.chatId() !== null);
+  protected readonly composer = viewChild.required(Composer);
   private readonly feed = viewChild.required<ElementRef<HTMLElement>>('feed');
 
   constructor() {

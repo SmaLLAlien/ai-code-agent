@@ -30,7 +30,8 @@ export async function createWorkspace(chatId: string): Promise<string> {
       dir,
     );
   } catch (err) {
-    await fs.rm(dir, { recursive: true, force: true });
+    // Windows may briefly lock files git just touched; a failed cleanup must not hide the cause.
+    await fs.rm(dir, { recursive: true, force: true, maxRetries: 5 }).catch(() => undefined);
     throw new Error(`Failed to create workspace from ${repo}#${ref}`, { cause: err });
   }
 
