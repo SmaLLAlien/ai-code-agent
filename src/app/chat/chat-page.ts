@@ -13,6 +13,7 @@ import {
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { LayoutService } from '../layout.service';
+import { ConfirmService } from '../shared/confirm-dialog';
 import { AgentSessionService } from './agent-session.service';
 import type { ChatMode } from './chat-items';
 import { ChatsService } from './chats.service';
@@ -94,6 +95,7 @@ export class ChatPage {
   protected readonly layout = inject(LayoutService);
   private readonly chats = inject(ChatsService);
   private readonly router = inject(Router);
+  private readonly confirm = inject(ConfirmService);
   private readonly creating = signal(false);
 
   protected readonly composer = viewChild.required(Composer);
@@ -124,11 +126,15 @@ export class ChatPage {
   }
 
   /** Used by the route guard: leaving a running chat stops the agent, so ask first. */
-  confirmLeave(): boolean {
+  async confirmLeave(): Promise<boolean> {
     if (!this.session.isRunning()) {
       return true;
     }
-    const leave = confirm('Агент ещё работает. Остановить его и перейти?');
+    const leave = await this.confirm.confirm({
+      title: 'Агент ещё работает',
+      message: 'Если уйти из чата, агент остановится. Остановить его и перейти?',
+      confirmText: 'Остановить и перейти',
+    });
     if (leave) {
       this.session.stop();
     }

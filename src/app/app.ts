@@ -10,16 +10,25 @@ import { LayoutService } from './layout.service';
   template: `
     <div class="shell" [class.sidebar-open]="layout.sidebarOpen()">
       <app-chat-sidebar class="sidebar" />
+      <!-- <router-outlet> is an element itself: keep it and the routed page in one grid cell. -->
+      <div class="content">
+        <router-outlet />
+      </div>
       @if (layout.sidebarOpen()) {
         <div class="backdrop" aria-hidden="true" (click)="layout.closeSidebar()"></div>
       }
-      <router-outlet />
     </div>
   `,
   styles: `
     .shell {
       display: grid;
       grid-template-columns: 16rem minmax(0, 1fr);
+      height: 100dvh;
+      overflow: hidden;
+    }
+    .content {
+      display: flex;
+      min-width: 0;
       height: 100dvh;
     }
     @media (max-width: 767px) {

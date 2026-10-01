@@ -19,6 +19,7 @@ const TOOL_VERBS: Record<string, string> = {
   grep: 'Ищет',
   find: 'Ищет файлы',
   ls: 'Смотрит папку',
+  remember: 'Запоминает',
 };
 
 /** One agent action. Collapsed to a single line; expands to args, live output and result. */
@@ -62,7 +63,7 @@ export class ToolCallItem {
   protected readonly target = computed(() => {
     try {
       const args = JSON.parse(this.item().args) as Record<string, unknown>;
-      return String(args['path'] ?? args['command'] ?? args['pattern'] ?? '');
+      return String(args['path'] ?? args['command'] ?? args['pattern'] ?? args['fact'] ?? '');
     } catch {
       return '';
     }

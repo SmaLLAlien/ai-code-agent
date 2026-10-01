@@ -35,8 +35,6 @@ import { MarkdownView } from './markdown-view';
     }
     .plan {
       display: block;
-      max-height: 28rem;
-      overflow-y: auto;
     }
     .actions {
       display: flex;

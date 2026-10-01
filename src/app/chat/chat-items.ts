@@ -23,7 +23,8 @@ export type ChatItem =
   | { kind: 'tool'; id: string; name: string; args: string; output?: string; result?: string; status: ToolStatus }
   | { kind: 'question'; id: string; questions: Question[]; answered: boolean }
   | { kind: 'plan'; id: string; content: string; decided: boolean }
-  | { kind: 'files'; id: string; files: string[] };
+  | { kind: 'files'; id: string; files: string[] }
+  | { kind: 'notice'; id: string; text: string };
 
 /** CUSTOM event names sent by the server (see server/src/agui/pi-to-agui.ts). */
 const Custom = {
@@ -32,6 +33,7 @@ const Custom = {
   AskUser: 'ask_user',
   PlanReady: 'plan_ready',
   FilesChanged: 'files_changed',
+  Compaction: 'compaction',
 } as const;
 
 /** Tools whose calls are shown by dedicated UI (question card, progress list), not as tool rows. */
@@ -117,6 +119,15 @@ function applyCustom(items: readonly ChatItem[], name: string, value: unknown): 
           kind: 'files',
           id: String(data['commit'] ?? crypto.randomUUID()),
           files: (data['files'] as string[] | undefined) ?? [],
+        },
+      ];
+    case Custom.Compaction:
+      return [
+        ...items,
+        {
+          kind: 'notice',
+          id: crypto.randomUUID(),
+          text: 'Контекст сжат: ранняя часть разговора заменена кратким пересказом',
         },
       ];
     default:
