@@ -8,10 +8,18 @@
 
 ---
 
-## 6.1 Скачать zip
-- `GET /api/chats/:id/export.zip`: архив воркспейса без `node_modules`, `dist`, `.angular`
-  (потоково, пакет `archiver`), плюс `repo.bundle` (`git bundle create - --all`) для полной истории.
-- **Фронт:** кнопка «Скачать» в шапке чата.
+> **Статус (2026-10-01):** слой 6 сделан **раньше слоя 5** (решение пользователя) и только в части
+> 6.1. Пункты 6.2 и 6.3 отложены: 6.2 логичнее делать после песочниц (сборка в контейнере проекта),
+> для 6.3 нужны токен и группа корпоративного GitLab.
+
+## 6.1 Скачать zip ✅
+- `GET /api/chats/:id/export.zip` (`server/src/workspaces/export.ts`): `git archive --format=zip
+  --prefix=<name>/ --add-file=repo.bundle HEAD` — в архив попадают только файлы под git, значит
+  `node_modules`, `dist`, `.angular` отсекает `.gitignore` стартера; `repo.bundle` (`git bundle create
+  --all`) — полная история (`git clone repo.bundle <dir>`). Перед выгрузкой незакоммиченные изменения
+  коммитятся снимком. Без новых зависимостей; требуется git ≥ 2.35 (`--add-file`).
+- 409, пока агент работает. Имя: ASCII-slug заголовка или `project-<id>`, `filename*` — исходный заголовок.
+- **Фронт:** иконка «Скачать» (Material) в шапке чата; неактивна, пока агент работает.
 
 ## 6.2 Публикация по постоянной ссылке
 - `POST /api/chats/:id/publish`: в контейнере `ng build --base-href /p/<id>/` → скопировать
