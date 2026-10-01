@@ -17,55 +17,9 @@ import type { ChatMode } from './chat-items';
  */
 @Component({
   selector: 'app-composer',
-  template: `
-    <div class="toolbar">
-      <div class="modes" role="radiogroup" aria-label="Режим агента">
-        @for (option of modes; track option.mode) {
-          <button
-            type="button"
-            role="radio"
-            [attr.aria-checked]="mode() === option.mode"
-            [title]="option.description"
-            (click)="modeChange.emit(option.mode)"
-          >
-            {{ option.label }}
-          </button>
-        }
-      </div>
-    </div>
-    @if (suggestions().length) {
-      <ul class="commands" aria-label="Команды">
-        @for (command of suggestions(); track command.name) {
-          <li>
-            <button type="button" (click)="applySuggestion(command.name)">
-              <code>{{ command.name }}</code> {{ command.description }}
-            </button>
-          </li>
-        }
-      </ul>
-    }
-    <div class="row">
-      <label class="visually-hidden" for="composer-input">Сообщение агенту</label>
-      <textarea
-        #field
-        id="composer-input"
-        rows="3"
-        placeholder="Опишите идею или задачу. /plan или /agent — сменить режим"
-        [value]="text()"
-        [disabled]="disabled()"
-        (input)="text.set($any($event.target).value)"
-        (keydown.enter)="onEnter($event)"
-      ></textarea>
-      @if (running()) {
-        <button type="button" class="send stop" (click)="stop.emit()">Стоп</button>
-      } @else {
-        <button type="button" class="send" [disabled]="disabled() || !text().trim()" (click)="submit()">
-          Отправить
-        </button>
-      }
-    </div>
-  `,
-  styleUrl: './composer.css',
+  templateUrl: './composer.html',
+  styleUrl: './composer.scss',
+  host: { class: 'composer' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Composer {

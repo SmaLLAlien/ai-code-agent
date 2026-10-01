@@ -1,0 +1,10 @@
+<div class="app__shell" [class.app__shell--sidebar-open]="layout.sidebarOpen()">
+  <app-chat-sidebar class="app__sidebar" />
+  <!-- <router-outlet> is an element itself: keep it and the routed page in one grid cell. -->
+  <div class="app__content">
+    <router-outlet />
+  </div>
+  @if (layout.sidebarOpen()) {
+    <div class="app__backdrop" aria-hidden="true" (click)="layout.closeSidebar()"></div>
+  }
+</div>

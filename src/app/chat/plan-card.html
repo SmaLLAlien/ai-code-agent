@@ -1,0 +1,24 @@
+<section class="plan-card__card" aria-label="План реализации">
+  <h2 class="plan-card__title">План реализации</h2>
+  <app-markdown-view class="plan-card__plan" [text]="content()" />
+  @if (!decided()) {
+    <div class="plan-card__actions">
+      <button
+        type="button"
+        class="plan-card__button plan-card__button--primary"
+        [disabled]="disabled()"
+        (click)="approve.emit()"
+      >
+        Утвердить и реализовать
+      </button>
+      <button
+        type="button"
+        class="plan-card__button"
+        [disabled]="disabled()"
+        (click)="revise.emit()"
+      >
+        Доработать
+      </button>
+    </div>
+  }
+</section>

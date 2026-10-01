@@ -1,0 +1,10 @@
+// Block: .confirm-dialog (on the host element).
+.confirm-dialog {
+  &__confirm {
+    // Destructive actions: the filled button takes the theme's error colour.
+    &--danger {
+      --mat-button-filled-container-color: var(--mat-sys-error);
+      --mat-button-filled-label-text-color: var(--mat-sys-on-error);
+    }
+  }
+}

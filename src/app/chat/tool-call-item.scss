@@ -1,0 +1,58 @@
+@use 'mixins' as *;
+
+// Block: .tool-call-item (on the host element).
+:host {
+  display: block;
+  font-size: 0.875rem;
+}
+
+.tool-call-item {
+  &__summary {
+    @include button-reset;
+    @include focus-ring;
+    display: flex;
+    gap: 0.5rem;
+    align-items: baseline;
+    width: 100%;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface-muted);
+    color: var(--text-muted);
+    text-align: left;
+
+    &--error {
+      border-color: var(--danger);
+    }
+  }
+
+  &__status {
+    .tool-call-item__summary--error & {
+      color: var(--danger);
+    }
+  }
+
+  &__verb {
+    color: var(--text);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  &__target {
+    @include ellipsis;
+    font-family: var(--mono);
+  }
+
+  &__code {
+    max-height: 16rem;
+    margin: 0.25rem 0 0;
+    padding: 0.5rem;
+    overflow: auto;
+    border-radius: 6px;
+    background: var(--surface-muted);
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+}

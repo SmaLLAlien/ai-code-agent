@@ -11,6 +11,9 @@
 - Цвета и типографика — только из темы Material (`--mat-sys-*` токены), без захардкоженных цветов.
   Фирменный цвет — `#4ea524` (primary). Светлая и тёмная тема — по системной настройке.
 - Иконки — Material Symbols (`<mat-icon>`).
+- У каждого компонента свои `.html` и `.scss` (`templateUrl` / `styleUrl`), без инлайн-шаблонов и стилей.
+- Стили — SCSS в стиле **BEM** с вложенностью: класс блока на хосте (`host: { class: 'block' }`),
+  `&__element`, `&--modifier`; без стилей по тегам. Подробно — `.agents/rules/component-templates-and-styles.md`.
 
 ## Angular
 

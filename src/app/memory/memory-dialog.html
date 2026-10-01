@@ -1,0 +1,36 @@
+<h2 mat-dialog-title>Память команды</h2>
+
+<mat-dialog-content>
+  <p class="memory-dialog__hint">
+    Договорённости, которые агент учитывает в каждом чате. Агент дописывает сюда факты по просьбе
+    «запомни …».
+  </p>
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" aria-label="Загрузка памяти" />
+  } @else {
+    <mat-form-field appearance="outline" class="memory-dialog__editor">
+      <mat-label>Markdown</mat-label>
+      <textarea
+        matInput
+        class="memory-dialog__textarea"
+        rows="18"
+        [value]="content()"
+        (input)="content.set($any($event.target).value)"
+      ></textarea>
+      <mat-hint align="end">{{ sizeKb() }} / {{ maxKb() }} КБ</mat-hint>
+      @if (tooLarge()) {
+        <mat-error>Слишком большой текст — сократите память.</mat-error>
+      }
+    </mat-form-field>
+  }
+  @if (error(); as error) {
+    <p class="memory-dialog__error" role="alert">{{ error }}</p>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Отмена</button>
+  <button mat-flat-button [disabled]="loading() || saving() || tooLarge()" (click)="save()">
+    Сохранить
+  </button>
+</mat-dialog-actions>

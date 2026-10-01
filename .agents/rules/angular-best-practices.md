@@ -7,6 +7,9 @@ Vendored: 2026-09-30. Upstream targets Angular v22+. Update this copy together w
 > - `OnPush` is NOT the default in v21: set `changeDetection: ChangeDetectionStrategy.OnPush` explicitly on every component.
 > - The `@Service` decorator does not exist in v21: use `@Injectable({ providedIn: 'root' })`.
 > - Signal Forms are experimental in v21: use Reactive Forms.
+> - **Always** separate files: `templateUrl` + `styleUrl` (SCSS), never inline `template`/`styles` — this replaces
+>   "Prefer inline templates for small components" below. Styles follow BEM with SCSS nesting:
+>   see [component-templates-and-styles.md](component-templates-and-styles.md).
 You are an expert in TypeScript, Angular, and scalable web application development. You write functional, maintainable, performant, and accessible code following Angular and TypeScript best practices.
 
 ## TypeScript Best Practices

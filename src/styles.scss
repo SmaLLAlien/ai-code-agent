@@ -1,7 +1,5 @@
-/*
- * App design tokens mapped onto the Angular Material 3 system tokens (src/theme.scss), so custom
- * components and Material components share the company colours and the light/dark scheme.
- */
+// App design tokens mapped onto the Angular Material 3 system tokens (src/theme.scss), so custom
+// components and Material components share the company colours and the light/dark scheme.
 :root {
   --surface: var(--mat-sys-surface);
   --surface-muted: var(--mat-sys-surface-container);
@@ -26,6 +24,7 @@ body {
   line-height: 1.5;
 }
 
+// Utility: visible to screen readers only.
 .visually-hidden {
   position: absolute;
   width: 1px;

@@ -61,9 +61,13 @@ Node ≥ 22.19 (требование pi SDK).
 - **Обязательно следуй [.agents/rules/angular-best-practices.md](.agents/rules/angular-best-practices.md)**,
   включая раздел overrides для Angular 21 в его начале (OnPush явно, `@Injectable`, Reactive Forms).
 - TypeScript (клиент и сервер): [.agents/rules/typescript-best-practices.md](.agents/rules/typescript-best-practices.md).
+- **Шаблоны и стили: [.agents/rules/component-templates-and-styles.md](.agents/rules/component-templates-and-styles.md).**
+  У каждого компонента свои `.html` (`templateUrl`) и `.scss` (`styleUrl`), без инлайна. Стили — BEM с
+  вложенностью SCSS: класс блока на хосте (`host: { class: 'chat-page' }`), `&__element`, `&--modifier`;
+  общие миксины — `src/styles/_mixins.scss`.
 - UI: Angular Material с фирменной темой (`src/theme.scss`, primary `#4ea524`). Новый UI — на
   компонентах Material; цвета — через токены (`--mat-sys-*` или наши `--accent`, `--surface`… из
-  `src/styles.css`, которые на них ссылаются). Старые самописные компоненты переводим постепенно.
+  `src/styles.scss`, которые на них ссылаются). Старые самописные компоненты переводим постепенно.
 - Фичи — в папках `src/app/<feature>/`, маршруты — lazy (`loadComponent`).
 - HTTP к серверу — только через относительные пути `/api/...` (в dev проксируется на :3000).
 

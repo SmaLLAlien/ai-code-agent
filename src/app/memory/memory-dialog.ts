@@ -17,57 +17,9 @@ import { MemoryService } from './memory.service';
 @Component({
   selector: 'app-memory-dialog',
   imports: [MatDialogModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatProgressBarModule],
-  template: `
-    <h2 mat-dialog-title>Память команды</h2>
-    <mat-dialog-content>
-      <p class="hint">
-        Договорённости, которые агент учитывает в каждом чате. Агент дописывает сюда факты по просьбе
-        «запомни …».
-      </p>
-      @if (loading()) {
-        <mat-progress-bar mode="indeterminate" aria-label="Загрузка памяти" />
-      } @else {
-        <mat-form-field appearance="outline" class="editor">
-          <mat-label>Markdown</mat-label>
-          <textarea
-            matInput
-            rows="18"
-            [value]="content()"
-            (input)="content.set($any($event.target).value)"
-          ></textarea>
-          <mat-hint align="end">{{ sizeKb() }} / {{ maxKb() }} КБ</mat-hint>
-          @if (tooLarge()) {
-            <mat-error>Слишком большой текст — сократите память.</mat-error>
-          }
-        </mat-form-field>
-      }
-      @if (error(); as error) {
-        <p class="error" role="alert">{{ error }}</p>
-      }
-    </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Отмена</button>
-      <button mat-flat-button [disabled]="loading() || saving() || tooLarge()" (click)="save()">
-        Сохранить
-      </button>
-    </mat-dialog-actions>
-  `,
-  styles: `
-    .hint {
-      margin-top: 0;
-      color: var(--mat-sys-on-surface-variant);
-    }
-    .editor {
-      width: 100%;
-    }
-    .editor textarea {
-      font-family: var(--mono);
-      font-size: 0.875rem;
-    }
-    .error {
-      color: var(--mat-sys-error);
-    }
-  `,
+  templateUrl: './memory-dialog.html',
+  styleUrl: './memory-dialog.scss',
+  host: { class: 'memory-dialog' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MemoryDialog implements OnInit {

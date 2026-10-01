@@ -1,0 +1,23 @@
+<button
+  type="button"
+  class="tool-call-item__summary"
+  [class.tool-call-item__summary--error]="item().status === 'error'"
+  [attr.aria-expanded]="expanded()"
+  (click)="expanded.set(!expanded())"
+>
+  <span class="tool-call-item__status" aria-hidden="true">{{ statusView().icon }}</span>
+  <span class="tool-call-item__verb">{{ verb() }}</span>
+  <span class="tool-call-item__target">{{ target() }}</span>
+  <span class="visually-hidden">{{ statusView().label }}</span>
+</button>
+
+@if (expanded() || (item().status === 'running' && item().output)) {
+  <div class="tool-call-item__details">
+    @if (expanded()) {
+      <pre class="tool-call-item__code">{{ item().args }}</pre>
+    }
+    @if (item().result ?? item().output; as text) {
+      <pre class="tool-call-item__code">{{ text }}</pre>
+    }
+  </div>
+}

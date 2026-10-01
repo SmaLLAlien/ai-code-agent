@@ -1,0 +1,38 @@
+<section class="question-card__card" aria-label="Вопросы агента">
+  @for (question of questions(); track question.id) {
+    <fieldset class="question-card__question" [disabled]="disabled()">
+      <legend class="question-card__text">{{ question.text }}</legend>
+      <div class="question-card__options">
+        @for (option of question.options; track option) {
+          <button
+            type="button"
+            class="question-card__option"
+            [class.question-card__option--selected]="isSelected(question.id, option)"
+            [attr.aria-pressed]="isSelected(question.id, option)"
+            (click)="toggle(question, option)"
+          >
+            {{ option }}
+          </button>
+        }
+      </div>
+      <label class="question-card__custom">
+        <span class="visually-hidden">Свой вариант: {{ question.text }}</span>
+        <input
+          type="text"
+          class="question-card__input"
+          placeholder="Свой вариант"
+          [value]="custom()[question.id] ?? ''"
+          (input)="setCustom(question.id, $any($event.target).value)"
+        />
+      </label>
+    </fieldset>
+  }
+  <button
+    type="button"
+    class="question-card__submit"
+    [disabled]="disabled() || !complete()"
+    (click)="submit()"
+  >
+    Ответить
+  </button>
+</section>

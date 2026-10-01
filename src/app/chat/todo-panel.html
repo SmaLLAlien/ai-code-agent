@@ -1,0 +1,27 @@
+<button
+  type="button"
+  class="todo-panel__header"
+  [attr.aria-expanded]="expanded()"
+  (click)="expanded.set(!expanded())"
+>
+  Прогресс: {{ doneCount() }} / {{ items().length }}
+  @if (current(); as task) {
+    <span class="todo-panel__current">— {{ task.text }}</span>
+  }
+</button>
+
+@if (expanded()) {
+  <ol class="todo-panel__list">
+    @for (item of items(); track $index) {
+      <li
+        class="todo-panel__item"
+        [class.todo-panel__item--done]="item.status === 'done'"
+        [class.todo-panel__item--active]="item.status === 'in_progress'"
+      >
+        <span aria-hidden="true">{{ icon[item.status] }}</span>
+        {{ item.text }}
+        <span class="visually-hidden">({{ label[item.status] }})</span>
+      </li>
+    }
+  </ol>
+}

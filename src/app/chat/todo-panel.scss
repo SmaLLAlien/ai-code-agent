@@ -1,0 +1,52 @@
+@use 'mixins' as *;
+
+// Block: .todo-panel (on the host element).
+:host {
+  display: block;
+  margin-bottom: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-muted);
+  font-size: 0.875rem;
+}
+
+.todo-panel {
+  &__header {
+    @include button-reset;
+    @include focus-ring(-2px);
+    display: flex;
+    gap: 0.4rem;
+    width: 100%;
+    padding: 0.4rem 0.6rem;
+    color: var(--text);
+    font-weight: 600;
+    text-align: left;
+  }
+
+  &__current {
+    @include ellipsis;
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+
+  &__list {
+    margin: 0;
+    padding: 0 0.6rem 0.5rem;
+    list-style: none;
+  }
+
+  &__item {
+    display: flex;
+    gap: 0.4rem;
+    padding: 0.1rem 0;
+
+    &--done {
+      color: var(--text-muted);
+      text-decoration: line-through;
+    }
+
+    &--active {
+      font-weight: 600;
+    }
+  }
+}
