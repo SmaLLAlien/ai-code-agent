@@ -70,6 +70,11 @@ class ChatRegistry {
     return pending;
   }
 
+  /** Whether the agent of this chat is working right now (only loaded chats can be). */
+  isRunning(id: string): boolean {
+    return this.loaded.get(id)?.session.isStreaming ?? false;
+  }
+
   /** Persists title, mode and progress; the first user message becomes the title. */
   async saveAfterRun(chat: Chat, request: string): Promise<void> {
     if (chat.title === DEFAULT_TITLE) {

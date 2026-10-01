@@ -11,6 +11,9 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router, RouterLink } from '@angular/router';
 import { LayoutService } from '../layout.service';
 import { ConfirmService } from '../shared/confirm-dialog';
@@ -33,7 +36,15 @@ interface PendingStart {
  */
 @Component({
   selector: 'app-chat-page',
-  imports: [MessageList, Composer, TodoPanel, RouterLink],
+  imports: [
+    MessageList,
+    Composer,
+    TodoPanel,
+    RouterLink,
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule,
+  ],
   providers: [AgentSessionService],
   template: `
     <header>
@@ -50,6 +61,28 @@ interface PendingStart {
       <span class="mode">{{ session.mode() === 'plan' ? 'Режим плана' : 'Режим агента' }}</span>
       @if (session.isRunning()) {
         <span class="status" role="status">Агент работает…</span>
+      }
+      @if (session.chatId(); as chatId) {
+        <span class="spacer"></span>
+        @if (session.isRunning()) {
+          <button
+            mat-icon-button
+            disabled
+            aria-label="Скачать проект — доступно, когда агент закончит"
+          >
+            <mat-icon>download</mat-icon>
+          </button>
+        } @else {
+          <a
+            mat-icon-button
+            [href]="'/api/chats/' + chatId + '/export.zip'"
+            download
+            aria-label="Скачать проект (zip с историей изменений)"
+            matTooltip="Скачать проект (zip с историей изменений)"
+          >
+            <mat-icon>download</mat-icon>
+          </a>
+        }
       }
     </header>
     <main #feed class="feed" role="log" aria-live="polite" aria-label="Диалог с агентом">

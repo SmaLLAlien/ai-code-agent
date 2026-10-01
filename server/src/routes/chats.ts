@@ -9,6 +9,7 @@ import { CHAT_MODES, type ChatMode, PLAN_FILE } from '../chats/chat-state.js';
 import { type Chat, chatRegistry } from '../chats/chat.registry.js';
 import { userMessageEvents } from '../chats/event-log.js';
 import { commitCheckpoint } from '../workspaces/checkpoint.js';
+import { archiveName, archiveWorkspace } from '../workspaces/export.js';
 
 const MAX_TITLE_LENGTH = 120;
 
@@ -43,6 +44,34 @@ chatsRouter.patch('/:id', async (req, res) => {
   }
   const renamed = await chatRegistry.rename(req.params.id, title.trim());
   res.status(renamed ? 204 : 404).end();
+});
+
+/** Downloads the project as a zip with the full git history inside (`repo.bundle`). */
+chatsRouter.get('/:id/export.zip', async (req, res) => {
+  const record = await chatRegistry.store.get(req.params.id);
+  if (!record) {
+    res.status(404).json({ error: 'Chat not found' });
+    return;
+  }
+  if (chatRegistry.isRunning(record.id)) {
+    res.status(409).json({ error: 'The agent is working; wait until it finishes' });
+    return;
+  }
+  const name = archiveName(record.title, record.id);
+  const archive = await archiveWorkspace(record.workspacePath, name);
+  res.writeHead(200, {
+    'Content-Type': 'application/zip',
+    'Content-Disposition': `attachment; filename="${name}.zip"; filename*=UTF-8''${encodeURIComponent(
+      `${record.title}.zip`,
+    )}`,
+    'Cache-Control': 'no-store',
+  });
+  archive.stream.pipe(res);
+  archive.done.catch((err: unknown) => {
+    console.error('Export failed', err);
+    // Headers are already sent: break the connection so the download fails visibly.
+    res.destroy(err instanceof Error ? err : undefined);
+  });
 });
 
 /** Deletes the chat with its workspace and history (the UI asks for confirmation first). */
