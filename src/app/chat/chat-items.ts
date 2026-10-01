@@ -45,9 +45,17 @@ export function applyAgUiEvent(
   const event = baseEvent as AGUIEvent;
   switch (event.type) {
     case EventType.TEXT_MESSAGE_START:
-      return [...items, { kind: 'assistant', id: event.messageId, text: '' }];
+      // User messages come only from the stored history; live ones are added by the client itself.
+      return [
+        ...items,
+        { kind: event.role === 'user' ? 'user' : 'assistant', id: event.messageId, text: '' },
+      ];
     case EventType.TEXT_MESSAGE_CONTENT:
-      return appendText(items, 'assistant', event.messageId, event.delta);
+      return items.map((item) =>
+        (item.kind === 'assistant' || item.kind === 'user') && item.id === event.messageId
+          ? { ...item, text: item.text + event.delta }
+          : item,
+      );
     case EventType.REASONING_MESSAGE_START:
       return [...items, { kind: 'reasoning', id: event.messageId, text: '' }];
     case EventType.REASONING_MESSAGE_CONTENT:
@@ -123,6 +131,25 @@ export function stopRunningTools(items: readonly ChatItem[]): readonly ChatItem[
         item.kind === 'tool' && item.status === 'running' ? { ...item, status: 'stopped' } : item,
       )
     : items;
+}
+
+/**
+ * Rebuilds the feed from a stored event log. Questions and plans followed by a later user
+ * message were already answered or decided, so their buttons stay disabled.
+ */
+export function replayHistory(events: readonly BaseEvent[]): readonly ChatItem[] {
+  const items = events.reduce<readonly ChatItem[]>((acc, event) => applyAgUiEvent(acc, event), []);
+  let lastUser = -1;
+  items.forEach((item, index) => {
+    if (item.kind === 'user') {
+      lastUser = index;
+    }
+  });
+  return items.map((item, index) =>
+    index < lastUser && (item.kind === 'question' || item.kind === 'plan')
+      ? markHandled([item], item.id)[0]!
+      : item,
+  );
 }
 
 /** Marks a question or plan card as handled so its buttons are disabled. */

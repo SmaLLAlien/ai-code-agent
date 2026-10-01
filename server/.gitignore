@@ -2,3 +2,5 @@
 /dist
 /.pi-state
 /.env
+/data
+/data-test

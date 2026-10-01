@@ -14,10 +14,15 @@ import { createUpdateTodoTool, UPDATE_TODO } from './tools/update-todo.tool.js';
 const BUILTIN_TOOLS = ['read', 'bash', 'edit', 'write', 'grep', 'find', 'ls'];
 
 /**
- * Creates a pi agent session working inside the given workspace. History lives in memory.
+ * Creates or restores the pi agent session of a chat. The model's history is persisted by pi as
+ * JSONL in `sessionDir`; reopening the same directory continues the conversation.
  * `state` is the chat's mutable state: the mode extension and the tools read and update it.
  */
-export async function createSession(cwd: string, state: ChatState): Promise<AgentSession> {
+export async function createSession(
+  cwd: string,
+  state: ChatState,
+  sessionDir: string,
+): Promise<AgentSession> {
   const { dir: agentDir, thinkingLevel } = appConfig.agent;
 
   const resourceLoader = new DefaultResourceLoader({
@@ -37,7 +42,7 @@ export async function createSession(cwd: string, state: ChatState): Promise<Agen
     tools: [...BUILTIN_TOOLS, ASK_USER, UPDATE_TODO],
     customTools: [askUserTool, createUpdateTodoTool(state)],
     resourceLoader,
-    sessionManager: SessionManager.inMemory(cwd),
+    sessionManager: SessionManager.continueRecent(cwd, sessionDir),
   });
   if (modelFallbackMessage) {
     console.warn(modelFallbackMessage);

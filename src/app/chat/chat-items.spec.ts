@@ -1,5 +1,11 @@
 import { type BaseEvent, EventType } from '@ag-ui/client';
-import { applyAgUiEvent, type ChatItem, markHandled, stopRunningTools } from './chat-items';
+import {
+  applyAgUiEvent,
+  type ChatItem,
+  markHandled,
+  replayHistory,
+  stopRunningTools,
+} from './chat-items';
 
 function reduce(events: object[], initial: readonly ChatItem[] = []): readonly ChatItem[] {
   return events.reduce<readonly ChatItem[]>(
@@ -95,6 +101,27 @@ describe('applyAgUiEvent', () => {
     ]);
     const finished = [items[0]!];
     expect(stopRunningTools(finished)).toBe(finished);
+  });
+
+  it('replays a stored history with user messages and handled cards', () => {
+    const userMessage = (id: string, text: string) => [
+      { type: EventType.TEXT_MESSAGE_START, messageId: id, role: 'user' },
+      { type: EventType.TEXT_MESSAGE_CONTENT, messageId: id, delta: text },
+      { type: EventType.TEXT_MESSAGE_END, messageId: id },
+    ];
+    const items = replayHistory(
+      [
+        ...userMessage('u1', 'idea'),
+        custom('ask_user', { toolCallId: 'q1', questions: [] }),
+        ...userMessage('u2', 'answers'),
+        custom('plan_ready', { content: '# Plan' }),
+      ] as BaseEvent[],
+    );
+    expect(items.map((i) => i.kind)).toEqual(['user', 'question', 'user', 'plan']);
+    expect(items[0]).toEqual({ kind: 'user', id: 'u1', text: 'idea' });
+    // The question was answered by the later message; the newest plan still awaits a decision.
+    expect(items[1]).toMatchObject({ answered: true });
+    expect(items[3]).toMatchObject({ decided: false });
   });
 
   it('keeps the feed order and leaves unknown events untouched', () => {
