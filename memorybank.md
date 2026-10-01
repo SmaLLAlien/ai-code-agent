@@ -9,9 +9,14 @@
   без команды пользователя.
 - **Ветки:** слой 1 — `feat/layer-1-chat-agent`; слой 2 — `feat/layer-2-agent-ui`; слой 3 —
   `feat/layer-3-history` (`773bf69`); слой 4 — `feat/layer-4-memory` (от слоя 3). Все запушены.
-- **Стартер:** `starter-v2` (`dd4e010`, запушен) — Angular Material + тема `#4ea524`, правила
-  TypeScript, правила Material в AGENTS.md. `starter.ref` = `starter-v2` (проверено: новый воркспейс
-  содержит `@angular/material`, `src/theme.scss`, TS-правила).
+- **Стартер:** `starter-v3` (`5c53387`, запушен) — v2 (Angular Material + тема `#4ea524`, правила
+  TypeScript) + пустая оболочка `app.html` (`<router-outlet />` вместо заглушки Angular, иначе агент
+  дописывал UI под неё) + Material Symbols для `<mat-icon>`. `starter.ref` = `starter-v3`.
+- **Исправлено после ревью слоя 4:** `<router-outlet>` занимал ячейку сетки оболочки → чат уезжал под
+  сайдбар в узкую колонку, страница прокручивалась, сайдбар «пропадал» сверху. Outlet обёрнут в
+  `.content`, строка ленты `minmax(0, 1fr)`; убран вложенный скролл карточки плана; `mat-icon`
+  настроен на Material Symbols (`MatIconRegistry.setDefaultFontSetClass`).
+  Урок: проверять раскладку скриншотом на десктопной ширине, а не только размерами элементов.
 
 **Живая проверка слоя 4 (2026-10-01, juapi):** чат A «запомни … appearance="outline"» → тул `remember`,
 карточка «Запоминает» ✅ → новый чат B без напоминаний перечисляет Material, `#4ea524` и outline (из
