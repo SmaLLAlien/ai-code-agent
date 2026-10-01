@@ -35,6 +35,21 @@ export function createApp(clientDist: string): Express {
     }),
   );
 
+  // SPA fallback: client-side routes (e.g. /chat/:id) get index.html so a page reload works.
+  // Only page navigations qualify - /api is handled above and missing files (with an extension) stay 404.
+  app.use((req, res, next) => {
+    const isPage =
+      (req.method === 'GET' || req.method === 'HEAD') &&
+      !path.extname(req.path) &&
+      req.accepts('html') === 'html';
+    if (!isPage) {
+      next();
+      return;
+    }
+    res.setHeader('Cache-Control', 'no-cache');
+    res.sendFile(path.join(clientDist, 'index.html'), (err) => err && next(err));
+  });
+
   const errorHandler: ErrorRequestHandler = (err, _req, res, next) => {
     if (res.headersSent) {
       return next(err);

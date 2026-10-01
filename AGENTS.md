@@ -24,7 +24,9 @@ server/               Express 5 + TypeScript, ОТДЕЛЬНЫЙ пакет (с�
   src/agent/          pi: провайдеры LLM (llm.ts), фабрика сессий, tools/ (ask_user, update_todo),
                       extensions/ (режимы plan/agent)
   src/agui/           транслятор событий pi → AG-UI (+ CUSTOM-события UI)
-  src/chats/          реестр чатов, состояние чата (режим, todo)
+  src/chats/          реестр чатов (ленивая загрузка, выгрузка по простою), состояние чата,
+                      хранилище метаданных (chat.store.ts), журнал событий ленты (event-log.ts)
+  data/               (не в git) chats.json, chats/<id>/events.jsonl, chats/<id>/session/ — сессии pi
   src/workspaces/     клонирование стартера в воркспейс чата, git-чекпоинты
   agent/              agentDir pi: платформенные правила агента (AGENTS.md) и skills/
   config/             dev.json | test.json | prod.json (пакет `config`)

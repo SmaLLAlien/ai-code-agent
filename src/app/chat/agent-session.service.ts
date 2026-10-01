@@ -1,17 +1,27 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
-import { type AGUIEvent, EventType, HttpAgent } from '@ag-ui/client';
+import { type AGUIEvent, type BaseEvent, EventType, HttpAgent } from '@ag-ui/client';
 import { firstValueFrom } from 'rxjs';
 import {
   applyAgUiEvent,
   type ChatItem,
   type ChatMode,
   markHandled,
+  replayHistory,
   stopRunningTools,
   type TodoItem,
 } from './chat-items';
+import { ChatsService } from './chats.service';
 
 const PLAN_APPROVED_MESSAGE = 'План утверждён, приступай к реализации.';
+
+interface StoredChat {
+  id: string;
+  title: string;
+  mode: ChatMode;
+  todo: TodoItem[];
+  events: BaseEvent[];
+}
 
 /**
  * State of one chat with the agent. Provided per chat page, not in root.
@@ -20,6 +30,7 @@ const PLAN_APPROVED_MESSAGE = 'План утверждён, приступай �
 @Injectable()
 export class AgentSessionService {
   private readonly http = inject(HttpClient);
+  private readonly chats = inject(ChatsService);
   private agent: HttpAgent | undefined;
   private stopped = false;
 
@@ -30,13 +41,29 @@ export class AgentSessionService {
   readonly mode = signal<ChatMode>('plan');
   readonly todo = signal<readonly TodoItem[]>([]);
 
-  async init(): Promise<void> {
+  readonly loading = signal(false);
+  readonly notFound = signal(false);
+
+  /** Opens an existing chat: replays its stored feed and restores mode and progress. */
+  async load(id: string): Promise<void> {
+    this.loading.set(true);
+    this.notFound.set(false);
+    this.error.set(null);
     try {
-      const { id } = await firstValueFrom(this.http.post<{ id: string }>('/api/chats', {}));
+      const chat = await firstValueFrom(this.http.get<StoredChat>(`/api/chats/${id}`));
+      this.items.set(replayHistory(chat.events));
+      this.mode.set(chat.mode);
+      this.todo.set(chat.todo);
       this.agent = new HttpAgent({ url: `/api/chats/${id}/run`, threadId: id });
       this.chatId.set(id);
-    } catch {
-      this.error.set('Не удалось создать чат. Проверьте, что сервер запущен.');
+    } catch (err) {
+      if (err instanceof HttpErrorResponse && err.status === 404) {
+        this.notFound.set(true);
+      } else {
+        this.error.set('Не удалось загрузить чат. Проверьте, что сервер запущен.');
+      }
+    } finally {
+      this.loading.set(false);
     }
   }
 
@@ -94,6 +121,8 @@ export class AgentSessionService {
     } finally {
       this.items.update(stopRunningTools);
       this.isRunning.set(false);
+      // The server sets the title after the first run and bumps the chat to the top of the list.
+      void this.chats.refresh();
     }
   }
 

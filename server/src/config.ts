@@ -25,6 +25,8 @@ export interface AppConfig {
   port: number;
   /** Absolute path to the compiled Angular app (the `browser` output folder). */
   clientDist: string;
+  /** Absolute path to platform data: chat list, event logs, pi sessions. Not in git. */
+  dataDir: string;
   /** Absolute path to the folder holding one workspace per chat. Must live outside this repo. */
   workspacesRoot: string;
   starter: { repo: string; ref: string };
@@ -34,6 +36,8 @@ export interface AppConfig {
     /** Absolute path to pi's runtime state (models.json, auth.json). Not in git. */
     stateDir: string;
     thinkingLevel: ThinkingLevel;
+    /** Idle chats unload their pi session from memory after this many minutes. */
+    sessionIdleMinutes: number;
     llm: { active: string; providers: Record<string, LlmProviderConfig> };
   };
 }
@@ -70,6 +74,7 @@ function readLlm(): AppConfig['agent']['llm'] {
 export const appConfig: AppConfig = {
   port: config.get<number>('port'),
   clientDist: path.resolve(config.get<string>('clientDist')),
+  dataDir: path.resolve(config.get<string>('data.dir')),
   workspacesRoot: path.resolve(config.get<string>('workspaces.root')),
   starter: {
     repo: config.get<string>('starter.repo'),
@@ -79,6 +84,7 @@ export const appConfig: AppConfig = {
     dir: path.resolve(config.get<string>('agent.dir')),
     stateDir: path.resolve(config.get<string>('agent.stateDir')),
     thinkingLevel: config.get<ThinkingLevel>('agent.thinkingLevel'),
+    sessionIdleMinutes: config.get<number>('agent.sessionIdleMinutes'),
     llm: readLlm(),
   },
 };

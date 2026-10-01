@@ -1,10 +1,57 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { ChatSidebar } from './chat/chat-sidebar';
+import { LayoutService } from './layout.service';
 
+/** App shell: chat list on the left (slides in on narrow screens), the open chat on the right. */
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
-  template: '<router-outlet />',
+  imports: [RouterOutlet, ChatSidebar],
+  template: `
+    <div class="shell" [class.sidebar-open]="layout.sidebarOpen()">
+      <app-chat-sidebar class="sidebar" />
+      @if (layout.sidebarOpen()) {
+        <div class="backdrop" aria-hidden="true" (click)="layout.closeSidebar()"></div>
+      }
+      <router-outlet />
+    </div>
+  `,
+  styles: `
+    .shell {
+      display: grid;
+      grid-template-columns: 16rem minmax(0, 1fr);
+      height: 100dvh;
+    }
+    @media (max-width: 767px) {
+      .shell {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        z-index: 2;
+        width: min(18rem, 85vw);
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+      }
+      .sidebar-open .sidebar {
+        transform: none;
+      }
+      .backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 1;
+        background: rgb(0 0 0 / 0.4);
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .sidebar {
+        transition: none;
+      }
+    }
+  `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class App {}
+export class App {
+  protected readonly layout = inject(LayoutService);
+}

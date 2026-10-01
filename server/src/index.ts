@@ -11,6 +11,8 @@ try {
   process.exit(1);
 }
 
+chatRegistry.startIdleSweep();
+
 const app = createApp(appConfig.clientDist);
 const server = http.createServer(app);
 
