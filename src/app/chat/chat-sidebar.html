@@ -1,0 +1,61 @@
+<nav class="chat-sidebar__nav" aria-label="Чаты">
+  <a class="chat-sidebar__new" routerLink="/" (click)="layout.closeSidebar()">+ Новый чат</a>
+  <button mat-stroked-button type="button" class="chat-sidebar__memory" (click)="openMemory()">
+    <mat-icon>psychology</mat-icon>
+    Память команды
+  </button>
+
+  @if (chats.loadError()) {
+    <p class="chat-sidebar__hint" role="alert">Не удалось загрузить список чатов.</p>
+  }
+
+  <ul class="chat-sidebar__list">
+    @for (chat of chats.chats(); track chat.id) {
+      <li class="chat-sidebar__item">
+        @if (editingId() === chat.id) {
+          <label class="visually-hidden" [for]="'rename-' + chat.id">Название чата</label>
+          <input
+            class="chat-sidebar__rename"
+            [id]="'rename-' + chat.id"
+            maxlength="120"
+            [value]="chat.title"
+            (keydown.enter)="saveTitle(chat, $any($event.target).value)"
+            (keydown.escape)="editingId.set(null)"
+            (blur)="saveTitle(chat, $any($event.target).value)"
+          />
+        } @else {
+          <a
+            class="chat-sidebar__link"
+            [routerLink]="['/chat', chat.id]"
+            routerLinkActive="chat-sidebar__link--active"
+            ariaCurrentWhenActive="page"
+            (click)="layout.closeSidebar()"
+            >{{ chat.title }}</a
+          >
+          <button
+            mat-icon-button
+            type="button"
+            class="chat-sidebar__action"
+            [attr.aria-label]="'Переименовать: ' + chat.title"
+            (click)="editingId.set(chat.id)"
+          >
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            type="button"
+            class="chat-sidebar__action"
+            [attr.aria-label]="'Удалить: ' + chat.title"
+            (click)="remove(chat)"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
+        }
+      </li>
+    } @empty {
+      @if (!chats.loadError()) {
+        <li class="chat-sidebar__hint">Чатов пока нет</li>
+      }
+    }
+  </ul>
+</nav>

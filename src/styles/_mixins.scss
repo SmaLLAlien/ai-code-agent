@@ -1,0 +1,26 @@
+// Shared SCSS helpers. Use from component styles: `@use 'mixins' as *;`
+// (src/styles is on the Sass load path, see angular.json stylePreprocessorOptions).
+
+/// Visible keyboard focus ring in the accent colour.
+@mixin focus-ring($offset: 2px) {
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: $offset;
+  }
+}
+
+/// Button reset for custom (non-Material) buttons.
+@mixin button-reset {
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+/// Single line with an ellipsis when the text does not fit.
+@mixin ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

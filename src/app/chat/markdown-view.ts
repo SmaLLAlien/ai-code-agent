@@ -7,9 +7,10 @@ import { marked } from 'marked';
  */
 @Component({
   selector: 'app-markdown-view',
-  template: `<div class="md" [innerHTML]="html()"></div>`,
-  styleUrl: './markdown-view.css',
-  // Styles must reach the generated HTML, which has no Angular attributes; all rules are scoped by .md.
+  templateUrl: './markdown-view.html',
+  styleUrl: './markdown-view.scss',
+  host: { class: 'markdown-view' },
+  // Styles must reach the generated HTML, which has no Angular attributes; rules are scoped by the block.
   encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

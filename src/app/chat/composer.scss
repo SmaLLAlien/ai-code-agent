@@ -1,0 +1,98 @@
+@use 'mixins' as *;
+
+// Block: .composer (on the host element).
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.composer {
+  &__toolbar {
+    display: flex;
+    align-items: center;
+  }
+
+  &__modes {
+    display: inline-flex;
+    padding: 2px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  &__mode {
+    @include button-reset;
+    @include focus-ring;
+    padding: 0.2rem 0.8rem;
+    border-radius: 6px;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+
+    &--active {
+      background: var(--accent);
+      color: var(--on-accent);
+    }
+  }
+
+  &__commands {
+    margin: 0;
+    padding: 0.25rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface-muted);
+    list-style: none;
+  }
+
+  &__command {
+    @include button-reset;
+    @include focus-ring;
+    width: 100%;
+    padding: 0.3rem 0.5rem;
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 0.875rem;
+    text-align: left;
+
+    &:hover {
+      background: var(--surface);
+    }
+  }
+
+  &__row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-end;
+  }
+
+  &__input {
+    @include focus-ring;
+    flex: 1;
+    min-width: 0;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    resize: vertical;
+  }
+
+  &__send {
+    @include button-reset;
+    @include focus-ring;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    background: var(--accent);
+    color: var(--on-accent);
+    font-weight: 600;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &--stop {
+      background: var(--danger);
+    }
+  }
+}

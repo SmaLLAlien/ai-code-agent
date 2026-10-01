@@ -1,0 +1,76 @@
+<header class="chat-page__header">
+  <button
+    mat-icon-button
+    type="button"
+    class="chat-page__menu"
+    aria-label="Список чатов"
+    [attr.aria-expanded]="layout.sidebarOpen()"
+    (click)="layout.toggleSidebar()"
+  >
+    <mat-icon>menu</mat-icon>
+  </button>
+  <h1 class="chat-page__title">{{ title() }}</h1>
+  <span class="chat-page__mode">
+    {{ session.mode() === 'plan' ? 'Режим плана' : 'Режим агента' }}
+  </span>
+  @if (session.isRunning()) {
+    <span class="chat-page__status" role="status">Агент работает…</span>
+  }
+  @if (session.chatId(); as chatId) {
+    <span class="chat-page__spacer"></span>
+    @if (session.isRunning()) {
+      <button
+        mat-icon-button
+        disabled
+        aria-label="Скачать проект — доступно, когда агент закончит"
+      >
+        <mat-icon>download</mat-icon>
+      </button>
+    } @else {
+      <a
+        mat-icon-button
+        [href]="'/api/chats/' + chatId + '/export.zip'"
+        download
+        aria-label="Скачать проект (zip с историей изменений)"
+        matTooltip="Скачать проект (zip с историей изменений)"
+      >
+        <mat-icon>download</mat-icon>
+      </a>
+    }
+  }
+</header>
+
+<main #feed class="chat-page__feed" role="log" aria-live="polite" aria-label="Диалог с агентом">
+  @if (session.notFound()) {
+    <p class="chat-page__empty">
+      Чат не найден. <a class="chat-page__link" routerLink="/">Начать новый</a>
+    </p>
+  } @else if (session.loading()) {
+    <p class="chat-page__empty">Загрузка…</p>
+  } @else {
+    <app-message-list
+      [items]="session.items()"
+      [busy]="session.isRunning()"
+      (answer)="session.answerQuestion($event.id, $event.text)"
+      (approvePlan)="session.approvePlan($event)"
+      (revisePlan)="composer().focus()"
+    />
+  }
+</main>
+
+<footer class="chat-page__footer">
+  @if (session.todo().length) {
+    <app-todo-panel [items]="session.todo()" />
+  }
+  @if (session.error(); as error) {
+    <p class="chat-page__error" role="alert">{{ error }}</p>
+  }
+  <app-composer
+    [running]="session.isRunning()"
+    [disabled]="!ready()"
+    [mode]="session.mode()"
+    (send)="onSend($event)"
+    (stop)="session.stop()"
+    (modeChange)="session.setMode($event)"
+  />
+</footer>

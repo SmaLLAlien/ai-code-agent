@@ -1,0 +1,87 @@
+@use 'mixins' as *;
+
+// Block: .chat-page (on the host element).
+:host {
+  display: grid;
+  // minmax(0, 1fr): the feed row never grows with content, so only the feed scrolls.
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: 100%;
+  min-width: 0;
+  height: 100dvh;
+  max-width: 56rem;
+  margin: 0 auto;
+}
+
+.chat-page {
+  &__header {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    min-width: 0;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  &__menu {
+    display: none;
+
+    @media (max-width: 767px) {
+      display: inline-flex;
+    }
+  }
+
+  &__title {
+    @include ellipsis;
+    margin: 0;
+    font-size: 1.125rem;
+  }
+
+  &__mode {
+    flex-shrink: 0;
+    padding: 0.1rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+  }
+
+  &__status {
+    flex-shrink: 0;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+  }
+
+  &__spacer {
+    flex: 1;
+  }
+
+  &__feed {
+    // Containing block for absolutely positioned descendants (e.g. .visually-hidden labels):
+    // without it they escape the scroll area and stretch the document.
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    overflow-y: auto;
+  }
+
+  &__empty {
+    margin: auto;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  &__link {
+    color: var(--accent);
+  }
+
+  &__footer {
+    padding: 0.75rem 1rem 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  &__error {
+    margin: 0 0 0.5rem;
+    color: var(--danger);
+  }
+}

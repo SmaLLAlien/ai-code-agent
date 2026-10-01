@@ -25,31 +25,9 @@ const TOOL_VERBS: Record<string, string> = {
 /** One agent action. Collapsed to a single line; expands to args, live output and result. */
 @Component({
   selector: 'app-tool-call-item',
-  template: `
-    <button
-      type="button"
-      class="summary"
-      [class.error]="item().status === 'error'"
-      [attr.aria-expanded]="expanded()"
-      (click)="expanded.set(!expanded())"
-    >
-      <span class="status" aria-hidden="true">{{ statusView().icon }}</span>
-      <span class="verb">{{ verb() }}</span>
-      <span class="target">{{ target() }}</span>
-      <span class="visually-hidden">{{ statusView().label }}</span>
-    </button>
-    @if (expanded() || (item().status === 'running' && item().output)) {
-      <div class="details">
-        @if (expanded()) {
-          <pre>{{ item().args }}</pre>
-        }
-        @if (item().result ?? item().output; as text) {
-          <pre class="output">{{ text }}</pre>
-        }
-      </div>
-    }
-  `,
-  styleUrl: './tool-call-item.css',
+  templateUrl: './tool-call-item.html',
+  styleUrl: './tool-call-item.scss',
+  host: { class: 'tool-call-item' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ToolCallItem {

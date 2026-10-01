@@ -1,0 +1,102 @@
+@use 'mixins' as *;
+
+// Block: .chat-sidebar (on the host element).
+:host {
+  // Scroll container: keeps absolutely positioned descendants (.visually-hidden) inside.
+  position: relative;
+  display: block;
+  height: 100%;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+  background: var(--surface-muted);
+}
+
+.chat-sidebar {
+  &__nav {
+    padding: 0.75rem;
+  }
+
+  &__new {
+    @include focus-ring;
+    display: block;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    background: var(--accent);
+    color: var(--on-accent);
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+  }
+
+  &__memory {
+    width: 100%;
+    margin-bottom: 0.75rem;
+  }
+
+  &__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.15rem;
+  }
+
+  &__link {
+    @include ellipsis;
+    @include focus-ring(1px);
+    flex: 1;
+    min-width: 0;
+    padding: 0.4rem 0.5rem;
+    border-radius: 6px;
+    color: var(--text);
+    text-decoration: none;
+
+    &:hover {
+      background: var(--surface);
+    }
+
+    &--active {
+      background: var(--surface);
+      font-weight: 600;
+    }
+  }
+
+  &__action {
+    // Compact icon buttons so the title keeps most of the row.
+    --mat-icon-button-state-layer-size: 32px;
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    padding: 4px;
+    color: var(--text-muted);
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  &__rename {
+    @include focus-ring(1px);
+    flex: 1;
+    min-width: 0;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+  }
+
+  &__hint {
+    padding: 0.4rem 0.5rem;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+  }
+}

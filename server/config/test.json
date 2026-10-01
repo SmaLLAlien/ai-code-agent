@@ -3,7 +3,7 @@
   "clientDist": "../dist/ai-code-agent/browser",
   "data": { "dir": "./data-test" },
   "workspaces": { "root": "../../workspaces-test" },
-  "starter": { "repo": "https://github.com/SmaLLAlien/starter.git", "ref": "starter-v3" },
+  "starter": { "repo": "https://github.com/SmaLLAlien/starter.git", "ref": "starter-v4" },
   "agent": {
     "dir": "./agent",
     "stateDir": "./.pi-state",

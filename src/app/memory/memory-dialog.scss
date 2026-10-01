@@ -1,0 +1,20 @@
+// Block: .memory-dialog (on the host element).
+.memory-dialog {
+  &__hint {
+    margin-top: 0;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &__editor {
+    width: 100%;
+  }
+
+  &__textarea {
+    font-family: var(--mono);
+    font-size: 0.875rem;
+  }
+
+  &__error {
+    color: var(--mat-sys-error);
+  }
+}

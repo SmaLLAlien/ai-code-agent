@@ -1,0 +1,55 @@
+@for (item of items(); track item.id) {
+  @switch (item.kind) {
+    @case ('user') {
+      <p class="message-list__bubble message-list__bubble--user">{{ item.text }}</p>
+    }
+    @case ('assistant') {
+      <app-markdown-view
+        class="message-list__bubble message-list__bubble--assistant"
+        [text]="item.text"
+      />
+    }
+    @case ('reasoning') {
+      <details class="message-list__aside">
+        <summary class="message-list__summary">Размышления</summary>
+        <p class="message-list__reasoning">{{ item.text }}</p>
+      </details>
+    }
+    @case ('tool') {
+      <app-tool-call-item [item]="item" />
+    }
+    @case ('question') {
+      <app-question-card
+        [questions]="item.questions"
+        [disabled]="item.answered || busy()"
+        (answer)="answer.emit({ id: item.id, text: $event })"
+      />
+    }
+    @case ('plan') {
+      <app-plan-card
+        [content]="item.content"
+        [decided]="item.decided"
+        [disabled]="busy()"
+        (approve)="approvePlan.emit(item.id)"
+        (revise)="revisePlan.emit()"
+      />
+    }
+    @case ('notice') {
+      <p class="message-list__notice" role="note">{{ item.text }}</p>
+    }
+    @case ('files') {
+      <details class="message-list__aside">
+        <summary class="message-list__summary">Изменено файлов: {{ item.files.length }}</summary>
+        <ul class="message-list__files">
+          @for (file of item.files; track file) {
+            <li>{{ file }}</li>
+          }
+        </ul>
+      </details>
+    }
+  }
+} @empty {
+  <p class="message-list__empty">
+    Опишите идею или задачу — агент уточнит детали и предложит план.
+  </p>
+}

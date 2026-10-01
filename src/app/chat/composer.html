@@ -1,0 +1,58 @@
+<div class="composer__toolbar">
+  <div class="composer__modes" role="radiogroup" aria-label="Режим агента">
+    @for (option of modes; track option.mode) {
+      <button
+        type="button"
+        role="radio"
+        class="composer__mode"
+        [class.composer__mode--active]="mode() === option.mode"
+        [attr.aria-checked]="mode() === option.mode"
+        [title]="option.description"
+        (click)="modeChange.emit(option.mode)"
+      >
+        {{ option.label }}
+      </button>
+    }
+  </div>
+</div>
+
+@if (suggestions().length) {
+  <ul class="composer__commands" aria-label="Команды">
+    @for (command of suggestions(); track command.name) {
+      <li>
+        <button type="button" class="composer__command" (click)="applySuggestion(command.name)">
+          <code>{{ command.name }}</code> {{ command.description }}
+        </button>
+      </li>
+    }
+  </ul>
+}
+
+<div class="composer__row">
+  <label class="visually-hidden" for="composer-input">Сообщение агенту</label>
+  <textarea
+    #field
+    id="composer-input"
+    class="composer__input"
+    rows="3"
+    placeholder="Опишите идею или задачу. /plan или /agent — сменить режим"
+    [value]="text()"
+    [disabled]="disabled()"
+    (input)="text.set($any($event.target).value)"
+    (keydown.enter)="onEnter($event)"
+  ></textarea>
+  @if (running()) {
+    <button type="button" class="composer__send composer__send--stop" (click)="stop.emit()">
+      Стоп
+    </button>
+  } @else {
+    <button
+      type="button"
+      class="composer__send"
+      [disabled]="disabled() || !text().trim()"
+      (click)="submit()"
+    >
+      Отправить
+    </button>
+  }
+</div>

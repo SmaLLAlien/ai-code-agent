@@ -20,55 +20,9 @@ import { type ChatSummary, ChatsService } from './chats.service';
 @Component({
   selector: 'app-chat-sidebar',
   imports: [RouterLink, RouterLinkActive, MatButtonModule, MatIconModule],
-  template: `
-    <nav aria-label="Чаты">
-      <a class="new" routerLink="/" (click)="layout.closeSidebar()">+ Новый чат</a>
-      <button mat-stroked-button class="memory" type="button" (click)="openMemory()">
-        <mat-icon>psychology</mat-icon>
-        Память команды
-      </button>
-      @if (chats.loadError()) {
-        <p class="hint" role="alert">Не удалось загрузить список чатов.</p>
-      }
-      <ul>
-        @for (chat of chats.chats(); track chat.id) {
-          <li>
-            @if (editingId() === chat.id) {
-              <label class="visually-hidden" [for]="'rename-' + chat.id">Название чата</label>
-              <input
-                class="rename"
-                [id]="'rename-' + chat.id"
-                maxlength="120"
-                [value]="chat.title"
-                (keydown.enter)="saveTitle(chat, $any($event.target).value)"
-                (keydown.escape)="editingId.set(null)"
-                (blur)="saveTitle(chat, $any($event.target).value)"
-              />
-            } @else {
-              <a
-                [routerLink]="['/chat', chat.id]"
-                routerLinkActive="active"
-                ariaCurrentWhenActive="page"
-                (click)="layout.closeSidebar()"
-                >{{ chat.title }}</a
-              >
-              <button type="button" [attr.aria-label]="'Переименовать: ' + chat.title" (click)="editingId.set(chat.id)">
-                ✎
-              </button>
-              <button type="button" [attr.aria-label]="'Удалить: ' + chat.title" (click)="remove(chat)">
-                🗑
-              </button>
-            }
-          </li>
-        } @empty {
-          @if (!chats.loadError()) {
-            <li class="hint">Чатов пока нет</li>
-          }
-        }
-      </ul>
-    </nav>
-  `,
-  styleUrl: './chat-sidebar.css',
+  templateUrl: './chat-sidebar.html',
+  styleUrl: './chat-sidebar.scss',
+  host: { class: 'chat-sidebar' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatSidebar implements OnInit {

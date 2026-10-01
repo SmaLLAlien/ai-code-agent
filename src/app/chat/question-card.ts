@@ -7,40 +7,9 @@ import type { Question } from './chat-items';
  */
 @Component({
   selector: 'app-question-card',
-  template: `
-    <section class="card" aria-label="Вопросы агента">
-      @for (question of questions(); track question.id) {
-        <fieldset [disabled]="disabled()">
-          <legend>{{ question.text }}</legend>
-          <div class="options">
-            @for (option of question.options; track option) {
-              <button
-                type="button"
-                class="option"
-                [attr.aria-pressed]="isSelected(question.id, option)"
-                (click)="toggle(question, option)"
-              >
-                {{ option }}
-              </button>
-            }
-          </div>
-          <label class="custom">
-            <span class="visually-hidden">Свой вариант: {{ question.text }}</span>
-            <input
-              type="text"
-              placeholder="Свой вариант"
-              [value]="custom()[question.id] ?? ''"
-              (input)="setCustom(question.id, $any($event.target).value)"
-            />
-          </label>
-        </fieldset>
-      }
-      <button type="button" class="submit" [disabled]="disabled() || !complete()" (click)="submit()">
-        Ответить
-      </button>
-    </section>
-  `,
-  styleUrl: './question-card.css',
+  templateUrl: './question-card.html',
+  styleUrl: './question-card.scss',
+  host: { class: 'question-card' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class QuestionCard {

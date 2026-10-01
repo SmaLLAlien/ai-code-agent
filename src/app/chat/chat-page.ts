@@ -46,78 +46,9 @@ interface PendingStart {
     MatTooltipModule,
   ],
   providers: [AgentSessionService],
-  template: `
-    <header>
-      <button
-        type="button"
-        class="menu"
-        aria-label="Список чатов"
-        [attr.aria-expanded]="layout.sidebarOpen()"
-        (click)="layout.toggleSidebar()"
-      >
-        ☰
-      </button>
-      <h1>{{ title() }}</h1>
-      <span class="mode">{{ session.mode() === 'plan' ? 'Режим плана' : 'Режим агента' }}</span>
-      @if (session.isRunning()) {
-        <span class="status" role="status">Агент работает…</span>
-      }
-      @if (session.chatId(); as chatId) {
-        <span class="spacer"></span>
-        @if (session.isRunning()) {
-          <button
-            mat-icon-button
-            disabled
-            aria-label="Скачать проект — доступно, когда агент закончит"
-          >
-            <mat-icon>download</mat-icon>
-          </button>
-        } @else {
-          <a
-            mat-icon-button
-            [href]="'/api/chats/' + chatId + '/export.zip'"
-            download
-            aria-label="Скачать проект (zip с историей изменений)"
-            matTooltip="Скачать проект (zip с историей изменений)"
-          >
-            <mat-icon>download</mat-icon>
-          </a>
-        }
-      }
-    </header>
-    <main #feed class="feed" role="log" aria-live="polite" aria-label="Диалог с агентом">
-      @if (session.notFound()) {
-        <p class="empty">Чат не найден. <a routerLink="/">Начать новый</a></p>
-      } @else if (session.loading()) {
-        <p class="empty">Загрузка…</p>
-      } @else {
-        <app-message-list
-          [items]="session.items()"
-          [busy]="session.isRunning()"
-          (answer)="session.answerQuestion($event.id, $event.text)"
-          (approvePlan)="session.approvePlan($event)"
-          (revisePlan)="composer().focus()"
-        />
-      }
-    </main>
-    <footer>
-      @if (session.todo().length) {
-        <app-todo-panel [items]="session.todo()" />
-      }
-      @if (session.error(); as error) {
-        <p class="error" role="alert">{{ error }}</p>
-      }
-      <app-composer
-        [running]="session.isRunning()"
-        [disabled]="!ready()"
-        [mode]="session.mode()"
-        (send)="onSend($event)"
-        (stop)="session.stop()"
-        (modeChange)="session.setMode($event)"
-      />
-    </footer>
-  `,
-  styleUrl: './chat-page.css',
+  templateUrl: './chat-page.html',
+  styleUrl: './chat-page.scss',
+  host: { class: 'chat-page' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatPage {
