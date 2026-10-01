@@ -9,16 +9,24 @@ import {
 import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
 import { LayoutService } from '../layout.service';
+import { ConfirmService } from '../shared/confirm-dialog';
 import { type ChatSummary, ChatsService } from './chats.service';
 
 /** Chat list: open, rename and delete chats, start a new one. */
 @Component({
   selector: 'app-chat-sidebar',
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, MatButtonModule, MatIconModule],
   template: `
     <nav aria-label="Чаты">
       <a class="new" routerLink="/" (click)="layout.closeSidebar()">+ Новый чат</a>
+      <button mat-stroked-button class="memory" type="button" (click)="openMemory()">
+        <mat-icon>psychology</mat-icon>
+        Память команды
+      </button>
       @if (chats.loadError()) {
         <p class="hint" role="alert">Не удалось загрузить список чатов.</p>
       }
@@ -67,6 +75,8 @@ export class ChatSidebar implements OnInit {
   protected readonly chats = inject(ChatsService);
   protected readonly layout = inject(LayoutService);
   private readonly router = inject(Router);
+  private readonly dialog = inject(MatDialog);
+  private readonly confirm = inject(ConfirmService);
 
   protected readonly editingId = signal<string | null>(null);
 
@@ -83,6 +93,13 @@ export class ChatSidebar implements OnInit {
     void this.chats.refresh();
   }
 
+  protected async openMemory(): Promise<void> {
+    this.layout.closeSidebar();
+    // Loaded on demand: the editor (form field, input, progress bar) stays out of the initial bundle.
+    const { MemoryDialog } = await import('../memory/memory-dialog');
+    this.dialog.open(MemoryDialog, { width: '48rem', maxWidth: '96vw' });
+  }
+
   protected async saveTitle(chat: ChatSummary, value: string): Promise<void> {
     if (this.editingId() !== chat.id) {
       return;
@@ -95,7 +112,13 @@ export class ChatSidebar implements OnInit {
   }
 
   protected async remove(chat: ChatSummary): Promise<void> {
-    if (!confirm(`Удалить чат «${chat.title}» вместе с проектом? Это действие необратимо.`)) {
+    const confirmed = await this.confirm.confirm({
+      title: 'Удалить чат?',
+      message: `Чат «${chat.title}» будет удалён вместе с проектом и историей. Это действие необратимо.`,
+      confirmText: 'Удалить',
+      danger: true,
+    });
+    if (!confirmed) {
       return;
     }
     const wasOpen = this.openChatId() === chat.id;

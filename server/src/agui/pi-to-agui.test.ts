@@ -162,6 +162,28 @@ test('ask_user emits its questions and update_todo emits the new state', () => {
   });
 });
 
+test('a finished compaction is reported, an aborted one is not', () => {
+  const t = translator();
+  const done = t.translate({
+    type: 'compaction_end',
+    reason: 'threshold',
+    result: { summary: '...' },
+    aborted: false,
+    willRetry: false,
+  } as unknown as AgentSessionEvent);
+  assert.deepEqual(done, [
+    { type: EventType.CUSTOM, name: CustomEventName.Compaction, value: { reason: 'threshold' } },
+  ]);
+  const aborted = t.translate({
+    type: 'compaction_end',
+    reason: 'threshold',
+    result: undefined,
+    aborted: true,
+    willRetry: false,
+  } as unknown as AgentSessionEvent);
+  assert.deepEqual(aborted, []);
+});
+
 test('successful write/edit calls are recorded as written files', () => {
   const t = translator();
   t.translate(toolStart('w1', 'write', { path: 'docs/PLAN.md', content: '# Plan' }));

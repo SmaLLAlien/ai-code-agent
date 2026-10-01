@@ -17,6 +17,9 @@ export interface ChatState {
 /** The plan the agent writes in plan mode, relative to the workspace root. */
 export const PLAN_FILE = 'docs/PLAN.md';
 
+/** Key decisions of the project (style, structure, data), kept in the project for the team. */
+export const DECISIONS_FILE = 'docs/DECISIONS.md';
+
 export function createChatState(): ChatState {
   return { mode: 'plan', todo: [] };
 }

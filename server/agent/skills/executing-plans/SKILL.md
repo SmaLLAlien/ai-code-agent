@@ -15,7 +15,7 @@ description: Use in agent mode to implement an approved docs/PLAN.md task by tas
    - run its "Done when" check (at least `npm run build` when code changed); fix failures before moving on;
    - mark it `done`.
 4. **If something in the plan is wrong or blocked**, stop and explain it (use `ask_user` if the user
-   must choose). Do not silently change the scope.
+   must choose). Do not silently change the scope. When a decision changes, update `docs/DECISIONS.md`.
 5. **Finish** with the `verification-before-completion` skill, then a short summary: what works now,
    how to see it, what is left out.
 

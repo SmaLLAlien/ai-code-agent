@@ -1,0 +1,20 @@
+// Angular Material 3 theme in the company colour (#4ea524). Palettes: _theme-colors.scss
+// (generated with `ng generate @angular/material:theme-color --primary-color "#4ea524"`).
+@use '@angular/material' as mat;
+@use './theme-colors' as brand;
+
+html {
+  // light-dark(): Material system tokens follow the OS light/dark preference.
+  color-scheme: light dark;
+
+  @include mat.theme(
+    (
+      color: (
+        primary: brand.$primary-palette,
+        tertiary: brand.$tertiary-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+}

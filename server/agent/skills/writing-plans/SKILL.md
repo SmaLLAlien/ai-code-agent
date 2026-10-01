@@ -37,4 +37,6 @@ UI and approves it, so write it in the user's language and keep it scannable.
 - Name exact files. Follow the starter's structure (`src/app/<feature>/`, lazy routes).
 - The first task usually sets up routes/layout, the last one is a full build and self-check.
 - 3-10 tasks for an MVP. If it needs more, the scope is too big — say so and propose a cut.
+- Also write the key decisions from the brainstorming to `docs/DECISIONS.md`
+  (`## <date> — <decision>` + one line why).
 - After writing, reply with a 3-5 line summary and ask the user to approve the plan.

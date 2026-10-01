@@ -26,6 +26,7 @@ test('plan mode blocks commands and code changes but allows the plan file', () =
   assert.equal((toolCall('write', { path: 'src/app.ts' }) as { block?: boolean }).block, true);
   assert.equal((toolCall('edit', { path: '../docs/PLAN.md' }) as { block?: boolean }).block, true);
   assert.equal(toolCall('write', { path: 'docs/PLAN.md' }), undefined);
+  assert.equal(toolCall('write', { path: 'docs/DECISIONS.md' }), undefined);
   assert.equal(toolCall('edit', { path: path.join(cwd, 'docs', 'PLAN.md') }), undefined);
   assert.equal(toolCall('read', { path: 'src/app.ts' }), undefined);
   assert.equal(toolCall('ask_user', { questions: [] }), undefined);
@@ -42,6 +43,7 @@ test('the current mode is added to the system prompt on every run', () => {
   const event = { systemPromptOptions: { sections: {} as Record<string, string> } };
   handlers.get('before_agent_start')!(event);
   assert.match(event.systemPromptOptions.sections['mode']!, /PLAN mode/);
+  assert.match(event.systemPromptOptions.sections['today']!, /^Today is \d{4}-\d{2}-\d{2}\.$/);
 
   state.mode = 'agent';
   handlers.get('before_agent_start')!(event);

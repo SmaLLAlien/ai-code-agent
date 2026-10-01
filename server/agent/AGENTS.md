@@ -22,11 +22,22 @@ prototype. Your job is to turn it into a clean project on top of the starter, fo
 
 If the user attached or pasted an HTML prototype, use the skill `html-prototype-import`.
 
+## Memory and decisions
+
+- The `team_memory` section of this prompt holds team-wide agreements (UI on Angular Material,
+  Angular and TypeScript rules, remembered preferences). Follow it in every project.
+- When the user asks to remember something, or states a lasting team-wide preference, call
+  `remember` with one short fact. Do not use it for details of the current project.
+- Keep `docs/DECISIONS.md` in the project: one entry per key decision (design, structure, data source,
+  scope cut) — date (today's date from the prompt), decision, reason. Write it, like `docs/PLAN.md`,
+  in the language the user writes in. Write it while planning and update it
+  when a decision changes during implementation. It is how the team learns why the MVP looks this way.
+
 ## Boundaries
 
 - Stay inside the workspace. Do not touch files outside it.
 - Keep the starter's structure and tooling: no framework switches, no new state libraries, no CSS
-  frameworks unless the user explicitly asks.
+  frameworks unless the user explicitly asks. UI components come from Angular Material.
 - Do not modify `server/` config, build config (`angular.json`, `tsconfig*.json`) or `package.json`
   scripts unless the task requires it; say why when you do.
 - Install dependencies only when needed, with exact names; prefer what the starter already has.

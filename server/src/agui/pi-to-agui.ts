@@ -17,6 +17,8 @@ export const CustomEventName = {
   PlanReady: 'plan_ready',
   /** `{ commit, files }` — files the agent changed during the run, committed as a checkpoint. */
   FilesChanged: 'files_changed',
+  /** `{ reason }` — pi summarized the older part of the conversation to fit the context window. */
+  Compaction: 'compaction',
 } as const;
 
 const FILE_WRITE_TOOLS = new Set(['write', 'edit']);
@@ -77,6 +79,10 @@ export class PiToAgUiTranslator {
       }
       case 'tool_execution_end':
         return this.toolEnd(event.toolCallId, event.toolName, event.result, event.isError);
+      case 'compaction_end':
+        return event.result && !event.aborted
+          ? [custom(CustomEventName.Compaction, { reason: event.reason })]
+          : [];
       default:
         return [];
     }

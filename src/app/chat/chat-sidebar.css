@@ -22,6 +22,11 @@ nav {
   text-decoration: none;
 }
 
+.memory {
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+
 ul {
   margin: 0;
   padding: 0;

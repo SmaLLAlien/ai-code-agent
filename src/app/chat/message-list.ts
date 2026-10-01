@@ -42,6 +42,9 @@ import { ToolCallItem } from './tool-call-item';
             (revise)="revisePlan.emit()"
           />
         }
+        @case ('notice') {
+          <p class="notice" role="note">{{ item.text }}</p>
+        }
         @case ('files') {
           <details class="files">
             <summary>Изменено файлов: {{ item.files.length }}</summary>
@@ -88,6 +91,12 @@ import { ToolCallItem } from './tool-call-item';
       max-width: min(42rem, 90%);
       color: var(--text-muted);
       font-size: 0.875rem;
+    }
+    .notice {
+      align-self: center;
+      margin: 0.25rem 0;
+      color: var(--text-muted);
+      font-size: 0.8rem;
     }
     .reasoning p {
       margin: 0.25rem 0 0;

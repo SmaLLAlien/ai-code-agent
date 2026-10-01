@@ -6,9 +6,12 @@ import {
 } from '@earendil-works/pi-coding-agent';
 import type { ChatState } from '../chats/chat-state.js';
 import { appConfig } from '../config.js';
+import { teamMemory } from '../memory/index.js';
+import { memoryExtension } from './extensions/memory.extension.js';
 import { modeExtension } from './extensions/mode.extension.js';
 import { getAgentModel, getModelRuntime } from './llm.js';
 import { ASK_USER, askUserTool } from './tools/ask-user.tool.js';
+import { createRememberTool, REMEMBER } from './tools/remember.tool.js';
 import { createUpdateTodoTool, UPDATE_TODO } from './tools/update-todo.tool.js';
 
 const BUILTIN_TOOLS = ['read', 'bash', 'edit', 'write', 'grep', 'find', 'ls'];
@@ -28,7 +31,7 @@ export async function createSession(
   const resourceLoader = new DefaultResourceLoader({
     cwd,
     agentDir,
-    extensionFactories: [modeExtension(state, cwd)],
+    extensionFactories: [modeExtension(state, cwd), memoryExtension(teamMemory)],
   });
   await resourceLoader.reload();
 
@@ -39,8 +42,8 @@ export async function createSession(
     model: await getAgentModel(),
     thinkingLevel,
     // An explicit allowlist enables only the listed tools, custom ones included.
-    tools: [...BUILTIN_TOOLS, ASK_USER, UPDATE_TODO],
-    customTools: [askUserTool, createUpdateTodoTool(state)],
+    tools: [...BUILTIN_TOOLS, ASK_USER, UPDATE_TODO, REMEMBER],
+    customTools: [askUserTool, createUpdateTodoTool(state), createRememberTool(teamMemory)],
     resourceLoader,
     sessionManager: SessionManager.continueRecent(cwd, sessionDir),
   });
