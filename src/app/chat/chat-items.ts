@@ -1,4 +1,5 @@
 import { type AGUIEvent, type BaseEvent, EventType } from '@ag-ui/client';
+import type { Attachment } from './attachments';
 
 export type ChatMode = 'plan' | 'agent';
 
@@ -17,7 +18,7 @@ export interface Question {
 export type ToolStatus = 'running' | 'done' | 'error' | 'stopped';
 
 export type ChatItem =
-  | { kind: 'user'; id: string; text: string }
+  | { kind: 'user'; id: string; text: string; attachments?: Attachment[] }
   | { kind: 'assistant'; id: string; text: string }
   | { kind: 'reasoning'; id: string; text: string }
   | { kind: 'tool'; id: string; name: string; args: string; output?: string; result?: string; status: ToolStatus }
@@ -34,6 +35,7 @@ const Custom = {
   PlanReady: 'plan_ready',
   FilesChanged: 'files_changed',
   Compaction: 'compaction',
+  UserAttachments: 'user_attachments',
 } as const;
 
 /** Tools whose calls are shown by dedicated UI (question card, progress list), not as tool rows. */
@@ -130,6 +132,12 @@ function applyCustom(items: readonly ChatItem[], name: string, value: unknown): 
           text: 'Контекст сжат: ранняя часть разговора заменена кратким пересказом',
         },
       ];
+    case Custom.UserAttachments: {
+      const attachments = (data['attachments'] as Attachment[] | undefined) ?? [];
+      return items.map((item) =>
+        item.kind === 'user' && item.id === data['messageId'] ? { ...item, attachments } : item,
+      );
+    }
     default:
       return items;
   }

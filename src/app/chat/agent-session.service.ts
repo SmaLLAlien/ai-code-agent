@@ -1,7 +1,14 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
-import { type AGUIEvent, type BaseEvent, EventType, HttpAgent } from '@ag-ui/client';
+import {
+  type AGUIEvent,
+  type BaseEvent,
+  type ContentPart,
+  EventType,
+  HttpAgent,
+} from '@ag-ui/client';
 import { firstValueFrom } from 'rxjs';
+import { type Attachment, toContentParts } from './attachments';
 import {
   applyAgUiEvent,
   type ChatItem,
@@ -51,6 +58,7 @@ export class AgentSessionService {
     this.error.set(null);
     try {
       const chat = await firstValueFrom(this.http.get<StoredChat>(`/api/chats/${id}`));
+      revokePreviews(this.items());
       this.items.set(replayHistory(chat.events));
       this.mode.set(chat.mode);
       this.todo.set(chat.todo);
@@ -83,16 +91,41 @@ export class AgentSessionService {
     void this.send(PLAN_APPROVED_MESSAGE);
   }
 
-  async send(text: string): Promise<void> {
+  async send(text: string, files: readonly File[] = []): Promise<void> {
     const agent = this.agent;
     const message = text.trim();
-    if (!agent || !message || this.isRunning()) {
+    if (!agent || (!message && !files.length) || this.isRunning()) {
       return;
     }
 
+    let parts: ContentPart[];
+    try {
+      parts = await toContentParts(files);
+    } catch (err) {
+      this.error.set(err instanceof Error ? err.message : 'Не удалось прочитать файл');
+      return;
+    }
+    const attachments = files.map((file): Attachment => {
+      const kind = file.type.startsWith('image/') ? 'image' : 'document';
+      return { name: file.name, kind, ...(kind === 'image' && { url: URL.createObjectURL(file) }) };
+    });
+
     const id = crypto.randomUUID();
-    this.items.update((items) => [...items, { kind: 'user', id, text: message }]);
-    agent.addMessage({ id, role: 'user', content: message });
+    this.items.update((items) => [
+      ...items,
+      { kind: 'user', id, text: message, ...(attachments.length && { attachments }) },
+    ]);
+    // The server reads only the last user message (pi keeps the history), so earlier messages are
+    // dropped: otherwise every run would upload all previously attached files again.
+    agent.setMessages([
+      {
+        id,
+        role: 'user',
+        content: parts.length
+          ? [...(message ? [{ type: 'text' as const, text: message }] : []), ...parts]
+          : message,
+      },
+    ]);
     this.error.set(null);
     this.stopped = false;
     this.isRunning.set(true);
@@ -146,5 +179,14 @@ export class AgentSessionService {
       this.mode.set(snapshot.mode);
     }
     this.todo.set(snapshot.todo ?? []);
+  }
+}
+
+/** Frees the object URLs of images previewed before they were stored on the server. */
+function revokePreviews(items: readonly ChatItem[]): void {
+  for (const item of items) {
+    if (item.kind === 'user') {
+      item.attachments?.forEach((a) => a.url?.startsWith('blob:') && URL.revokeObjectURL(a.url));
+    }
   }
 }

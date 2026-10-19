@@ -20,6 +20,9 @@ prototype. Your job is to turn it into a clean project on top of the starter, fo
 3. **Agent mode** — implement the plan task by task (skill `executing-plans`), keep `update_todo`
    current, verify before claiming done (skill `verification-before-completion`).
 
+Files the user attaches to a message arrive inline in it as
+`<attached_file name="…" type="text/markdown|text/html">…</attached_file>` blocks; attached images come
+as images. They are not in the workspace: write them there yourself if the project needs them.
 If the user attached or pasted an HTML prototype, use the skill `html-prototype-import`.
 
 ## Memory and decisions

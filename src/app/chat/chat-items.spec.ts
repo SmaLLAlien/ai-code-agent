@@ -27,6 +27,19 @@ describe('applyAgUiEvent', () => {
     expect(items).toEqual([{ kind: 'assistant', id: 'm1', text: 'Hello' }]);
   });
 
+  it('attaches files to a stored user message', () => {
+    const attachments = [
+      { name: 'shot.png', kind: 'image', url: '/api/chats/c/attachments/x.png' },
+      { name: 'spec.md', kind: 'document' },
+    ];
+    const items = reduce([
+      { type: EventType.TEXT_MESSAGE_START, messageId: 'u1', role: 'user' },
+      { type: EventType.TEXT_MESSAGE_END, messageId: 'u1' },
+      custom('user_attachments', { messageId: 'u1', attachments }),
+    ]);
+    expect(items).toEqual([{ kind: 'user', id: 'u1', text: '', attachments }]);
+  });
+
   it('builds a reasoning block', () => {
     const items = reduce([
       { type: EventType.REASONING_START, messageId: 's1' },

@@ -1,7 +1,27 @@
 @for (item of items(); track item.id) {
   @switch (item.kind) {
     @case ('user') {
-      <p class="message-list__bubble message-list__bubble--user">{{ item.text }}</p>
+      @if (item.text) {
+        <p class="message-list__bubble message-list__bubble--user">{{ item.text }}</p>
+      }
+      @if (item.attachments?.length) {
+        <ul class="message-list__attachments" aria-label="Вложения">
+          @for (attachment of item.attachments; track $index) {
+            <li class="message-list__attachment">
+              @if (attachment.kind === 'image' && attachment.url) {
+                <a [href]="attachment.url" target="_blank" rel="noopener">
+                  <img class="message-list__image" [src]="attachment.url" [alt]="attachment.name" />
+                </a>
+              } @else {
+                <span class="message-list__document">
+                  <mat-icon aria-hidden="true">description</mat-icon>
+                  {{ attachment.name }}
+                </span>
+              }
+            </li>
+          }
+        </ul>
+      }
     }
     @case ('assistant') {
       <app-markdown-view

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { MatIconModule } from '@angular/material/icon';
 import type { ChatItem } from './chat-items';
 import { MarkdownView } from './markdown-view';
 import { PlanCard } from './plan-card';
@@ -7,7 +8,7 @@ import { ToolCallItem } from './tool-call-item';
 
 @Component({
   selector: 'app-message-list',
-  imports: [MarkdownView, PlanCard, QuestionCard, ToolCallItem],
+  imports: [MatIconModule, MarkdownView, PlanCard, QuestionCard, ToolCallItem],
   templateUrl: './message-list.html',
   styleUrl: './message-list.scss',
   host: { class: 'message-list' },

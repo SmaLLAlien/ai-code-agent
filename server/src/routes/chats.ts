@@ -6,6 +6,13 @@ import { EventEncoder } from '@ag-ui/encoder';
 import { Router } from 'express';
 import { custom, CustomEventName, PiToAgUiTranslator } from '../agui/pi-to-agui.js';
 import { CHAT_MODES, type ChatMode, PLAN_FILE } from '../chats/chat-state.js';
+import {
+  AttachmentError,
+  buildPrompt,
+  parseUserMessage,
+  requestSummary,
+  type UserMessage,
+} from '../chats/attachments.js';
 import { type Chat, chatRegistry } from '../chats/chat.registry.js';
 import { userMessageEvents } from '../chats/event-log.js';
 import { commitCheckpoint } from '../workspaces/checkpoint.js';
@@ -74,6 +81,26 @@ chatsRouter.get('/:id/export.zip', async (req, res) => {
   });
 });
 
+/** An image attached to a user message, shown in the feed. */
+chatsRouter.get('/:id/attachments/:file', async (req, res) => {
+  const record = await chatRegistry.store.get(req.params.id);
+  const file = record && chatRegistry.attachments.filePath(record.id, req.params.file);
+  if (!file) {
+    res.status(404).json({ error: 'Attachment not found' });
+    return;
+  }
+  // The name is a fresh uuid per upload, so the content never changes.
+  res.sendFile(
+    file,
+    { headers: { 'Cache-Control': 'private, max-age=31536000, immutable' } },
+    (err) => {
+      if (err && !res.headersSent) {
+        res.status(404).json({ error: 'Attachment not found' });
+      }
+    },
+  );
+});
+
 /** Deletes the chat with its workspace and history (the UI asks for confirmation first). */
 chatsRouter.delete('/:id', async (req, res) => {
   const deleted = await chatRegistry.delete(req.params.id);
@@ -96,17 +123,28 @@ chatsRouter.post('/:id/run', async (req, res) => {
     return;
   }
   const input = req.body as Partial<RunAgentInput>;
-  const text = lastUserText(input);
-  if (!text) {
+  let message: UserMessage;
+  try {
+    message = parseUserMessage(input);
+  } catch (err) {
+    if (err instanceof AttachmentError) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
+    throw err;
+  }
+  if (!message.text && !message.images.length && !message.documents.length) {
     res.status(400).json({ error: 'No user message' });
     return;
   }
+  const text = requestSummary(message);
+  const attachments = await chatRegistry.attachments.save(chat.id, message);
 
   const threadId = chat.id;
   const runId = input.runId ?? randomUUID();
   const encoder = new EventEncoder();
   // Everything shown during the run goes to the chat's event log, starting with the user message.
-  const recorded: AGUIEvent[] = userMessageEvents(text);
+  const recorded: AGUIEvent[] = userMessageEvents(message.text, attachments);
   const send = (event: AGUIEvent): void => {
     recorded.push(event);
     // After the client disconnects the socket is destroyed; writing would emit an error.
@@ -141,7 +179,8 @@ chatsRouter.post('/:id/run', async (req, res) => {
   });
 
   try {
-    await session.prompt(text);
+    const images = message.images.map(({ type, data, mimeType }) => ({ type, data, mimeType }));
+    await session.prompt(buildPrompt(message), images.length ? { images } : undefined);
     translator.closeOpen().forEach(send);
     (await runOutcomeEvents(chat, translator, text)).forEach(send);
     send(
@@ -172,7 +211,11 @@ chatsRouter.post('/:id/abort', async (req, res) => {
   res.status(204).end();
 });
 
-async function persistRun(chat: Chat, events: readonly AGUIEvent[], request: string): Promise<void> {
+async function persistRun(
+  chat: Chat,
+  events: readonly AGUIEvent[],
+  request: string,
+): Promise<void> {
   try {
     await chatRegistry.events.append(chat.id, events);
     await chatRegistry.saveAfterRun(chat, request);
@@ -205,19 +248,4 @@ async function runOutcomeEvents(
     return checkpoint ? [custom(CustomEventName.FilesChanged, checkpoint)] : [];
   }
   return [];
-}
-
-function lastUserText(input: Partial<RunAgentInput>): string {
-  const message = [...(input.messages ?? [])].reverse().find((m) => m.role === 'user');
-  if (!message) {
-    return '';
-  }
-  const { content } = message;
-  if (typeof content === 'string') {
-    return content.trim();
-  }
-  return content
-    .flatMap((part) => (part.type === 'text' ? [part.text] : []))
-    .join('\n')
-    .trim();
 }

@@ -20,7 +20,7 @@ import { ConfirmService } from '../shared/confirm-dialog';
 import { AgentSessionService } from './agent-session.service';
 import type { ChatMode } from './chat-items';
 import { ChatsService } from './chats.service';
-import { Composer } from './composer';
+import { Composer, type ComposerMessage } from './composer';
 import { MessageList } from './message-list';
 import { TodoPanel } from './todo-panel';
 
@@ -29,6 +29,12 @@ interface PendingStart {
   pendingMessage?: string;
   pendingMode?: ChatMode;
 }
+
+/**
+ * Files attached to the first message, by the id of the chat just created for it. Kept in memory
+ * rather than in the navigation state: history entries are size-limited and outlive the page.
+ */
+const pendingFiles = new Map<string, File[]>();
 
 /**
  * One chat. Without an `id` it is the "new chat" page: the chat (and its workspace) is created
@@ -105,14 +111,17 @@ export class ChatPage {
     return leave;
   }
 
-  protected async onSend(text: string): Promise<void> {
+  protected async onSend({ text, files }: ComposerMessage): Promise<void> {
     if (this.session.chatId()) {
-      await this.session.send(text);
+      await this.session.send(text, files);
       return;
     }
     this.creating.set(true);
     try {
       const id = await this.chats.create();
+      if (files.length) {
+        pendingFiles.set(id, files);
+      }
       const state: PendingStart = { pendingMessage: text, pendingMode: this.session.mode() };
       await this.router.navigate(['/chat', id], { state });
     } catch {
@@ -126,12 +135,14 @@ export class ChatPage {
     await this.session.load(id);
     // The first message typed on the "new chat" page is sent once the chat is open.
     const { pendingMessage, pendingMode } = (history.state ?? {}) as PendingStart;
-    if (pendingMessage && this.session.chatId() === id) {
+    const files = pendingFiles.get(id) ?? [];
+    pendingFiles.delete(id);
+    if ((pendingMessage || files.length) && this.session.chatId() === id) {
       history.replaceState({ ...history.state, pendingMessage: undefined }, '');
       if (pendingMode) {
         this.session.setMode(pendingMode);
       }
-      void this.session.send(pendingMessage);
+      void this.session.send(pendingMessage ?? '', files);
     }
   }
 }

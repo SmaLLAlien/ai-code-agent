@@ -10,6 +10,8 @@ export interface CustomProviderConfig {
   api: 'openai-completions' | 'openai-responses';
   contextWindow: number;
   maxTokens: number;
+  /** What the model accepts; without `image` pi replaces attached images with a placeholder. */
+  input?: ('text' | 'image')[];
 }
 
 export interface LlmProviderConfig {
@@ -52,7 +54,9 @@ function readProviders(): Record<string, LlmProviderConfig> {
         piProvider: p.piProvider,
         model: p.model,
         apiKeyEnv: p.apiKeyEnv,
-        ...(p.custom && { custom: { ...p.custom } }),
+        ...(p.custom && {
+          custom: { ...p.custom, ...(p.custom.input && { input: [...p.custom.input] }) },
+        }),
       },
     ]),
   );

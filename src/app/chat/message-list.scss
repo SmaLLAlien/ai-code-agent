@@ -28,6 +28,46 @@
     }
   }
 
+  &__attachments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    align-self: flex-end;
+    max-width: min(42rem, 90%);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__image {
+    display: block;
+    max-width: 12rem;
+    max-height: 9rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    object-fit: cover;
+  }
+
+  &__document {
+    display: inline-flex;
+    gap: 0.25rem;
+    align-items: center;
+    padding: 0.25rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface-muted);
+    font-size: 0.875rem;
+    word-break: break-all;
+
+    mat-icon {
+      flex: none;
+      width: 18px;
+      height: 18px;
+      font-size: 18px;
+    }
+  }
+
   // Collapsible secondary info: reasoning, changed files.
   &__aside {
     align-self: flex-start;

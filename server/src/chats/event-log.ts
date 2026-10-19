@@ -2,7 +2,8 @@ import { randomUUID } from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { type AGUIEvent, EventType } from '@ag-ui/core';
-import { CustomEventName } from '../agui/pi-to-agui.js';
+import { custom, CustomEventName } from '../agui/pi-to-agui.js';
+import type { AttachmentView } from './attachments.js';
 
 /**
  * The chat feed as it was shown, stored as AG-UI events (one JSON per line). Replaying them through
@@ -42,13 +43,22 @@ export class ChatEventLog {
   }
 }
 
-/** The user's message in the same AG-UI shape as assistant messages, so the log replays it too. */
-export function userMessageEvents(text: string): AGUIEvent[] {
+/**
+ * The user's message in the same AG-UI shape as assistant messages, so the log replays it too.
+ * Attachments follow as a CUSTOM event with names only: file contents stay out of the log.
+ */
+export function userMessageEvents(
+  text: string,
+  attachments: readonly AttachmentView[] = [],
+): AGUIEvent[] {
   const messageId = randomUUID();
   return [
     { type: EventType.TEXT_MESSAGE_START, messageId, role: 'user' },
-    { type: EventType.TEXT_MESSAGE_CONTENT, messageId, delta: text },
+    ...(text ? [{ type: EventType.TEXT_MESSAGE_CONTENT, messageId, delta: text } as const] : []),
     { type: EventType.TEXT_MESSAGE_END, messageId },
+    ...(attachments.length
+      ? [custom(CustomEventName.UserAttachments, { messageId, attachments })]
+      : []),
   ];
 }
 

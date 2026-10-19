@@ -5,6 +5,18 @@
 
 ## Текущее состояние
 
+- **Вложения в сообщениях (2026-10-19, не закоммичено):** картинки (png/jpeg/gif/webp ≤ 5 МБ) и
+  .md/.html (≤ 200 КБ), до 10 файлов — кнопка, drag-and-drop, вставка из буфера в composer.
+  Транспорт — AG-UI `ContentPart` (`image`/`document`, `source.type: 'data'`, имя в `metadata.filename`)
+  в том же POST `/run` (для него свой `express.json` 25 МБ). Сервер (`server/src/chats/attachments.ts`):
+  картинки → `session.prompt(text, { images })`, .md/.html — **только инлайн** в текст блоками
+  `<attached_file>` (решение пользователя; в workspace не кладём). Картинки копируются в
+  `data/chats/<id>/attachments/` и отдаются `GET /api/chats/:id/attachments/:file`; в журнал ленты —
+  CUSTOM `user_attachments` только с именами/URL. Клиент шлёт в HttpAgent лишь последнее сообщение
+  (`setMessages`), иначе каждый run заново выгружал бы все прошлые файлы.
+  Модель juapi → `gemini-3.6-flash`, у custom-провайдера новое поле `input` (`["text","image"]`).
+  **Не проверено вживую:** vision через juapi (картинка в промпте).
+
 - **Рефакторинг стиля кода — закоммичен и запушен** (ветка платформы `feat/scss-bem-templates` от
   `feat/layer-6-export`; стартер слит в `main`, тег `starter-v4` = `c730570`, `starter.ref` = `starter-v4`;
   в рабочую `server/data/memory.md` дописаны пункты про templateUrl/SCSS/BEM). Требования пользователя: все шаблоны во
@@ -204,6 +216,21 @@ error handler'а; `Composer` чистит поле напрямую; стату�
 | Пользователи — внутренняя команда; песочницы — свой Docker-хост | Ответы пользователя |
 
 ## Gotchas (особенности библиотек)
+
+Вложения:
+- pi-ai молча заменяет картинки текстовой заглушкой, если у модели `input` без `image`
+  (`transform-messages.js` `downgradeUnsupportedImages`) — для custom-моделей задавать `custom.input`.
+- `HttpAgent` отправляет в каждом run **все** накопленные `messages` — с base64-вложениями это
+  мегабайты на каждый запуск; держим в агенте только последнее сообщение.
+- Браузеры часто дают пустой `File.type` для `.md` — документы определяем по расширению.
+- juapi (2026-10-19): `Provider finish_reason: content_filter` с 0 выходных токенов — сбой случайного
+  upstream, а не содержимое: тот же запрос (с HTML-вложением 45 КБ) при повторе проходил 6/6; рядом
+  бывают 503 «Verify your account» и 429 «Upstream quota exhausted». pi сам ретраит 5xx/429, но не
+  content_filter → `server/src/agent/retry.ts` оборачивает приватный `AgentSession._isRetryableError`
+  (проверять при обновлении pi). Транслятор сбрасывает ошибку на `auto_retry_start`, иначе успешный
+  повтор всё равно заканчивался RUN_ERROR.
+- pi: у custom-модели без `reasoning: true` уровень thinking принудительно `off` (в сессии
+  `thinkingLevel: "off"` при конфиге `medium`).
 
 Проверено в слое 4:
 - pi: компакция включена по умолчанию (`enabled ?? true`), настройки читаются из

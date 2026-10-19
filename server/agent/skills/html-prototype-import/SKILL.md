@@ -1,6 +1,6 @@
 ---
 name: html-prototype-import
-description: Use when the user provides an AI-generated single-file HTML prototype (pasted or as a file in the workspace) and wants it turned into a proper Angular project on the starter. Treat the HTML as a visual and functional reference, never copy it as one blob.
+description: Use when the user provides an AI-generated single-file HTML prototype (pasted, attached to the message as an `<attached_file>` block, or as a file in the workspace) and wants it turned into a proper Angular project on the starter. Treat the HTML as a visual and functional reference, never copy it as one blob.
 ---
 
 # Turning an HTML prototype into a starter project
@@ -25,4 +25,5 @@ The prototype shows what the user wants; the starter defines how it is built.
 - Rebuild with the project rules: standalone components, signals, native control flow, lazy routes.
 - No `innerHTML` with prototype markup, no copied inline `<script>`, no global jQuery-style DOM code.
 - Keep texts and visual design recognisable; fix obvious accessibility issues (labels, contrast, alt).
-- Put the original file under `docs/prototype/` for reference instead of deleting it.
+- Put the original file under `docs/prototype/` for reference instead of deleting it (an attached
+  prototype is not in the workspace yet: write its content there).

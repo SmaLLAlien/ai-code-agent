@@ -19,6 +19,8 @@ export const CustomEventName = {
   FilesChanged: 'files_changed',
   /** `{ reason }` — pi summarized the older part of the conversation to fit the context window. */
   Compaction: 'compaction',
+  /** `{ messageId, attachments: [{ name, kind, url? }] }` — files attached to a user message. */
+  UserAttachments: 'user_attachments',
 } as const;
 
 const FILE_WRITE_TOOLS = new Set(['write', 'edit']);
@@ -63,7 +65,11 @@ export class PiToAgUiTranslator {
       case 'message_end': {
         // A failed model request (auth, network, 4xx/5xx) ends the assistant message with
         // stopReason 'error'; pi does not emit a message_update 'error' for it.
-        const message = event.message as { role?: string; stopReason?: string; errorMessage?: string };
+        const message = event.message as {
+          role?: string;
+          stopReason?: string;
+          errorMessage?: string;
+        };
         if (message.role === 'assistant' && message.stopReason === 'error') {
           this.llmError = message.errorMessage ?? 'Model request failed';
         }
@@ -79,6 +85,15 @@ export class PiToAgUiTranslator {
       }
       case 'tool_execution_end':
         return this.toolEnd(event.toolCallId, event.toolName, event.result, event.isError);
+      // pi retries transient model errors itself; the run fails only if the retries do.
+      case 'auto_retry_start':
+        this.llmError = undefined;
+        return [];
+      case 'auto_retry_end':
+        if (!event.success) {
+          this.llmError = event.finalError ?? 'Model request failed';
+        }
+        return [];
       case 'compaction_end':
         return event.result && !event.aborted
           ? [custom(CustomEventName.Compaction, { reason: event.reason })]
@@ -105,7 +120,11 @@ export class PiToAgUiTranslator {
         }
         return [
           ...(this.openMessageId ? [] : this.startMessage()),
-          { type: EventType.TEXT_MESSAGE_CONTENT, messageId: this.openMessageId!, delta: update.delta },
+          {
+            type: EventType.TEXT_MESSAGE_CONTENT,
+            messageId: this.openMessageId!,
+            delta: update.delta,
+          },
         ];
       case 'text_end':
         return this.endMessage();
@@ -152,7 +171,12 @@ export class PiToAgUiTranslator {
     ];
   }
 
-  private toolEnd(toolCallId: string, toolName: string, result: unknown, isError: boolean): AGUIEvent[] {
+  private toolEnd(
+    toolCallId: string,
+    toolName: string,
+    result: unknown,
+    isError: boolean,
+  ): AGUIEvent[] {
     const writtenPath = this.toolPaths.get(toolCallId);
     this.toolPaths.delete(toolCallId);
     if (writtenPath && !isError) {

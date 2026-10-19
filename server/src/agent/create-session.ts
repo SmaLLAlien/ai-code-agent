@@ -10,6 +10,7 @@ import { teamMemory } from '../memory/index.js';
 import { memoryExtension } from './extensions/memory.extension.js';
 import { modeExtension } from './extensions/mode.extension.js';
 import { getAgentModel, getModelRuntime } from './llm.js';
+import { retryEmptyContentFilter } from './retry.js';
 import { ASK_USER, askUserTool } from './tools/ask-user.tool.js';
 import { createRememberTool, REMEMBER } from './tools/remember.tool.js';
 import { createUpdateTodoTool, UPDATE_TODO } from './tools/update-todo.tool.js';
@@ -50,5 +51,6 @@ export async function createSession(
   if (modelFallbackMessage) {
     console.warn(modelFallbackMessage);
   }
+  retryEmptyContentFilter(session);
   return session;
 }
