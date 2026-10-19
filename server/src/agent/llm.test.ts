@@ -31,3 +31,23 @@ test('buildCustomModels writes only custom providers, without keys', () => {
   });
   assert.doesNotMatch(JSON.stringify(result), /apiKey|JUAPI_API_KEY/);
 });
+
+test('buildCustomModels passes the configured input types (vision)', () => {
+  const result = buildCustomModels({
+    juapi: {
+      piProvider: 'juapi',
+      model: 'vision-model',
+      apiKeyEnv: 'JUAPI_API_KEY',
+      custom: {
+        baseUrl: 'https://example.test/v1',
+        api: 'openai-completions',
+        contextWindow: 1000,
+        maxTokens: 100,
+        input: ['text', 'image'],
+      },
+    },
+  });
+
+  const juapi = result.providers['juapi'] as { models: { input: string[] }[] };
+  assert.deepEqual(juapi.models[0]?.input, ['text', 'image']);
+});

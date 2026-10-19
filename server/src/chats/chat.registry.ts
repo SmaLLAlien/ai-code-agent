@@ -7,6 +7,7 @@ import { appConfig } from '../config.js';
 import { createWorkspace } from '../workspaces/workspace.service.js';
 import { type ChatState, createChatState } from './chat-state.js';
 import { type ChatRecord, type ChatStore, JsonFileChatStore } from './chat.store.js';
+import { ChatAttachments } from './attachments.js';
 import { ChatEventLog } from './event-log.js';
 
 export const DEFAULT_TITLE = 'Новый чат';
@@ -33,6 +34,7 @@ class ChatRegistry {
   private readonly chatsDir = path.join(appConfig.dataDir, 'chats');
   readonly store: ChatStore = new JsonFileChatStore(path.join(appConfig.dataDir, 'chats.json'));
   readonly events = new ChatEventLog(this.chatsDir);
+  readonly attachments = new ChatAttachments(this.chatsDir);
   private sweeper: NodeJS.Timeout | undefined;
 
   async create(): Promise<Chat> {

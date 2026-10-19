@@ -20,7 +20,12 @@ function toolStart(toolCallId: string, toolName: string, args: object): AgentSes
   return { type: 'tool_execution_start', toolCallId, toolName, args } as AgentSessionEvent;
 }
 
-function toolEnd(toolCallId: string, toolName: string, text: string, isError = false): AgentSessionEvent {
+function toolEnd(
+  toolCallId: string,
+  toolName: string,
+  text: string,
+  isError = false,
+): AgentSessionEvent {
   return {
     type: 'tool_execution_end',
     toolCallId,
@@ -61,6 +66,24 @@ test('empty deltas are skipped and a delta without start opens a message', () =>
   ]);
 });
 
+test('a model error is cleared when pi retries and kept when the retries fail', () => {
+  const t = translator();
+  const failedEnd = {
+    type: 'message_end',
+    message: { role: 'assistant', stopReason: 'error', errorMessage: 'content_filter' },
+  } as unknown as AgentSessionEvent;
+  t.translate(failedEnd);
+  assert.equal(t.error, 'content_filter');
+  t.translate({ type: 'auto_retry_start' } as unknown as AgentSessionEvent);
+  assert.equal(t.error, undefined);
+  t.translate({
+    type: 'auto_retry_end',
+    success: false,
+    finalError: 'gave up',
+  } as AgentSessionEvent);
+  assert.equal(t.error, 'gave up');
+});
+
 test('closeOpen ends a message left open by an aborted run', () => {
   const t = translator();
   t.translate(update('text_start'));
@@ -89,7 +112,10 @@ test('thinking maps to a reasoning span that closes before text starts', () => {
     EventType.REASONING_START,
     EventType.REASONING_MESSAGE_START,
   ]);
-  assert.deepEqual(types(t.closeOpen()), [EventType.REASONING_MESSAGE_END, EventType.REASONING_END]);
+  assert.deepEqual(types(t.closeOpen()), [
+    EventType.REASONING_MESSAGE_END,
+    EventType.REASONING_END,
+  ]);
 });
 
 test('tool execution maps to START, ARGS, END and RESULT with one toolCallId', () => {
@@ -202,7 +228,10 @@ test('model errors are recorded from message_update and message_end', () => {
   assert.equal(t.error, '401');
 
   const t2 = translator();
-  t2.translate({ type: 'message_end', message: { role: 'user', content: 'hi' } } as unknown as AgentSessionEvent);
+  t2.translate({
+    type: 'message_end',
+    message: { role: 'user', content: 'hi' },
+  } as unknown as AgentSessionEvent);
   assert.equal(t2.error, undefined);
   t2.translate({
     type: 'message_end',

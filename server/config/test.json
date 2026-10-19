@@ -14,13 +14,14 @@
       "providers": {
         "juapi": {
           "piProvider": "juapi",
-          "model": "gemini-3.1-flash-lite",
+          "model": "gemini-3.6-flash",
           "apiKeyEnv": "JUAPI_API_KEY",
           "custom": {
             "baseUrl": "https://www.juapi.net/v1",
             "api": "openai-completions",
             "contextWindow": 200000,
-            "maxTokens": 32000
+            "maxTokens": 32000,
+            "input": ["text", "image"]
           }
         },
         "gemini": {

@@ -34,6 +34,21 @@ test('userMessageEvents describes the user message as an AG-UI text message', ()
   assert.equal(end?.type, EventType.TEXT_MESSAGE_END);
 });
 
+test('userMessageEvents adds attachment names as a CUSTOM event after the message', () => {
+  const events = userMessageEvents('', [{ name: 'a.png', kind: 'image', url: '/x.png' }]);
+  assert.deepEqual(
+    events.map((e) => e.type),
+    [EventType.TEXT_MESSAGE_START, EventType.TEXT_MESSAGE_END, EventType.CUSTOM],
+  );
+  const last = events[2];
+  assert.ok(last?.type === EventType.CUSTOM);
+  assert.equal(last.name, 'user_attachments');
+  assert.deepEqual(last.value, {
+    messageId: events[0] && 'messageId' in events[0] ? events[0].messageId : undefined,
+    attachments: [{ name: 'a.png', kind: 'image', url: '/x.png' }],
+  });
+});
+
 test('appends runs and reads them back in order', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'event-log-'));
   try {

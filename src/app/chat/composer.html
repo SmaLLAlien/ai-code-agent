@@ -28,18 +28,61 @@
   </ul>
 }
 
+@if (files().length) {
+  <mat-chip-set class="composer__files" aria-label="Вложения">
+    @for (picked of files(); track picked.id) {
+      <mat-chip class="composer__file" (removed)="removeFile(picked.id)">
+        @if (picked.preview) {
+          <img matChipAvatar class="composer__thumb" [src]="picked.preview" alt="" />
+        } @else {
+          <mat-icon matChipAvatar>description</mat-icon>
+        }
+        {{ picked.file.name }}
+        <button matChipRemove type="button" [attr.aria-label]="'Убрать ' + picked.file.name">
+          <mat-icon>cancel</mat-icon>
+        </button>
+      </mat-chip>
+    }
+  </mat-chip-set>
+}
+@if (fileError(); as error) {
+  <p class="composer__error" role="alert">{{ error }}</p>
+}
+
 <div class="composer__row">
+  <input
+    #picker
+    type="file"
+    class="visually-hidden"
+    multiple
+    tabindex="-1"
+    aria-hidden="true"
+    [accept]="accept"
+    (change)="onPick($event)"
+  />
+  <button
+    mat-icon-button
+    type="button"
+    class="composer__attach"
+    aria-label="Прикрепить файлы: картинки, .md, .html"
+    matTooltip="Прикрепить картинки, .md или .html"
+    [disabled]="disabled()"
+    (click)="picker.click()"
+  >
+    <mat-icon>attach_file</mat-icon>
+  </button>
   <label class="visually-hidden" for="composer-input">Сообщение агенту</label>
   <textarea
     #field
     id="composer-input"
     class="composer__input"
     rows="3"
-    placeholder="Опишите идею или задачу. /plan или /agent — сменить режим"
+    placeholder="Опишите идею или задачу, приложите макет или ТЗ. /plan или /agent — сменить режим"
     [value]="text()"
     [disabled]="disabled()"
     (input)="text.set($any($event.target).value)"
     (keydown.enter)="onEnter($event)"
+    (paste)="onPaste($event)"
   ></textarea>
   @if (running()) {
     <button type="button" class="composer__send composer__send--stop" (click)="stop.emit()">
@@ -49,7 +92,7 @@
     <button
       type="button"
       class="composer__send"
-      [disabled]="disabled() || !text().trim()"
+      [disabled]="!canSend()"
       (click)="submit()"
     >
       Отправить

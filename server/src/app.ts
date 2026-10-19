@@ -20,6 +20,8 @@ export function createApp(clientDist: string): Express {
     }),
   );
 
+  // A run carries attached images and files inline (base64); the parser that runs first wins.
+  app.post('/api/chats/:id/run', express.json({ limit: '25mb' }));
   app.use('/api', express.json({ limit: '1mb' }), apiRouter);
 
   app.use(

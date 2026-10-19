@@ -46,7 +46,7 @@ export function buildCustomModels(providers: Record<string, LlmProviderConfig>):
                   name: model,
                   contextWindow: custom.contextWindow,
                   maxTokens: custom.maxTokens,
-                  input: ['text'],
+                  input: custom.input ?? ['text'],
                 },
               ],
             },
